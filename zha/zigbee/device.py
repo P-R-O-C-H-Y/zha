@@ -773,6 +773,34 @@ class Device(LogMixin, EventBase):
                 effect_variant=Identify.EffectVariant.Default,
             )
 
+    def _is_entity_removed_by_quirk(self, entity: PlatformEntity) -> bool:
+        if self.quirk_metadata is None:
+            return False
+
+        for meta in self.quirk_metadata.disabled_default_entities:
+            _LOGGER.debug("Checking if entity %s is removed by %s", entity, meta)
+
+            if meta.unique_id_suffix is not None and not entity.unique_id.endswith(
+                meta.unique_id_suffix
+            ):
+                continue
+
+            if meta.endpoint_id is not None and entity.endpoint.id != meta.endpoint_id:
+                continue
+
+            if meta.cluster_id is not None and not any(
+                cluster_handler.cluster.cluster_id == meta.cluster_id
+                for cluster_handler in entity.cluster_handlers.values()
+            ):
+                continue
+
+            if meta.function is not None and not meta.function(entity):
+                continue
+
+            return True
+
+        return False
+
     def _maybe_add_new_entities(self) -> Sequence[BaseEntity]:
         if self.is_active_coordinator:
             new_entities = discovery.DEVICE_PROBE.discover_coordinator_device_entities(
@@ -786,8 +814,10 @@ class Device(LogMixin, EventBase):
         # Discover all applicable entities
         for entity in new_entities:
             key = (entity.PLATFORM, entity.unique_id)
-
             if key in self.platform_entities:
+                continue
+
+            if self._is_entity_removed_by_quirk(entity):
                 continue
 
             self.platform_entities[key] = entity
