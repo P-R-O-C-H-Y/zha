@@ -19,7 +19,7 @@ from zigpy.zcl.clusters.measurement import (
     RelativeHumidity,
     SoilMoisture,
     TemperatureMeasurement,
-    WindSpeedMeasurement,
+    WindSpeed,
 )
 
 from zha.zigbee.cluster_handlers import AttrReportConfig, ClusterHandler, registries
@@ -211,7 +211,7 @@ class WindSpeedMeasurementClusterHandler(ClusterHandler):
 
     REPORT_CONFIG = (
         AttrReportConfig(
-            attr=WindSpeedMeasurement.AttributeDefs.measured_value.name,
+            attr=WindSpeed.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.01),
         ),
     )
