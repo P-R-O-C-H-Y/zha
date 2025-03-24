@@ -205,8 +205,8 @@ class FormaldehydeConcentrationClusterHandler(ClusterHandler):
     )
 
 
-@registries.CLUSTER_HANDLER_REGISTRY.register(WindSpeedMeasurement.cluster_id)
-class WindSpeedMeasurementClusterHandler(ClusterHandler):
+@registries.CLUSTER_HANDLER_REGISTRY.register(WindSpeed.cluster_id)
+class WindSpeedClusterHandler(ClusterHandler):
     """Wind Speed measurement cluster handler."""
 
     REPORT_CONFIG = (
