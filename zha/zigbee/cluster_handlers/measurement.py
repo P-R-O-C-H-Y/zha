@@ -19,6 +19,7 @@ from zigpy.zcl.clusters.measurement import (
     RelativeHumidity,
     SoilMoisture,
     TemperatureMeasurement,
+    WindSpeedMeasurement,
 )
 
 from zha.zigbee.cluster_handlers import AttrReportConfig, ClusterHandler, registries
@@ -200,5 +201,16 @@ class FormaldehydeConcentrationClusterHandler(ClusterHandler):
         AttrReportConfig(
             attr=FormaldehydeConcentration.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
+    )
+
+@registries.CLUSTER_HANDLER_REGISTRY.register(WindSpeedMeasurement.cluster_id)
+class WindSpeedMeasurementClusterHandler(ClusterHandler):
+    """Wind Speed measurement cluster handler."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr=WindSpeedMeasurement.AttributeDefs.measured_value.name,
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.01),
         ),
     )

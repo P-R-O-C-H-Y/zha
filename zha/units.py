@@ -140,6 +140,17 @@ class UnitOfEnergy(StrEnum):
     WATT_HOUR = "Wh"
 
 
+class UnitOfSpeed(StrEnum):
+    """Speed units."""
+
+    MILES_PER_HOUR = "mph"
+    KILOMETERS_PER_HOUR = "kph"
+    METERS_PER_SECOND = "m/s"
+    FEET_PER_SECOND = "ft/s"
+    KNOTS = "kn"
+    BEAUFORT = "Beaufort"
+
+
 # Concentration units
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
