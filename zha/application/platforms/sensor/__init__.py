@@ -52,11 +52,11 @@ from zha.units import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
-    UnitOfSpeed,
 )
 from zha.zigbee.cluster_handlers import ClusterAttributeUpdatedEvent
 from zha.zigbee.cluster_handlers.const import (
