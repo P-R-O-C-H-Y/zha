@@ -1972,4 +1972,4 @@ class WindSpeed(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _divisor = 100
     _attr_native_unit_of_measurement = UnitOfSpeed.METERS_PER_SECOND
-    _attr_primary_weight = 1
+    _attr_primary_weight = 2

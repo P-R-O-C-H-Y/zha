@@ -151,12 +151,14 @@ class UnitOfConductivity(StrEnum):
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
-    MILES_PER_HOUR = "mph"
-    KILOMETERS_PER_HOUR = "kph"
-    METERS_PER_SECOND = "m/s"
-    FEET_PER_SECOND = "ft/s"
-    KNOTS = "kn"
-    BEAUFORT = "Beaufort"
+    BEAUFORT = "Beaufort"  
+    FEET_PER_SECOND = "ft/s"  
+    INCHES_PER_SECOND = "in/s"  
+    METERS_PER_SECOND = "m/s"  
+    KILOMETERS_PER_HOUR = "km/h"  
+    KNOTS = "kn"  
+    MILES_PER_HOUR = "mph"  
+    MILLIMETERS_PER_SECOND = "mm/s"  
 
 
 # Concentration units
