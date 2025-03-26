@@ -140,6 +140,14 @@ class UnitOfEnergy(StrEnum):
     WATT_HOUR = "Wh"
 
 
+class UnitOfConductivity(StrEnum):
+    """Conductivity units."""
+
+    SIEMENS_PER_CM = "S/cm"
+    MICROSIEMENS_PER_CM = "µS/cm"
+    MILLISIEMENS_PER_CM = "mS/cm"
+
+
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 

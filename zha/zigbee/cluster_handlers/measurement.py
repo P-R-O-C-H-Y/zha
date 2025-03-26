@@ -9,6 +9,7 @@ from zigpy.zcl.clusters.measurement import (
     PM25,
     CarbonDioxideConcentration,
     CarbonMonoxideConcentration,
+    ElectricalConductivity,
     FlowMeasurement,
     FormaldehydeConcentration,
     IlluminanceLevelSensing,
@@ -201,6 +202,18 @@ class FormaldehydeConcentrationClusterHandler(ClusterHandler):
         AttrReportConfig(
             attr=FormaldehydeConcentration.AttributeDefs.measured_value.name,
             config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
+    )
+
+
+@registries.CLUSTER_HANDLER_REGISTRY.register(ElectricalConductivity.cluster_id)
+class ElectricalConductivityClusterHandler(ClusterHandler):
+    """Electrical Conductivity cluster handler."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr=ElectricalConductivity.AttributeDefs.measured_value.name,
+            config=REPORT_CONFIG_DEFAULT,
         ),
     )
 

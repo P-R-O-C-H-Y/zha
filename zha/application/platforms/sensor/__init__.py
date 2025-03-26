@@ -45,6 +45,7 @@ from zha.units import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfConductivity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -66,6 +67,7 @@ from zha.zigbee.cluster_handlers.const import (
     CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_DEVICE_TEMPERATURE,
     CLUSTER_HANDLER_DIAGNOSTIC,
+    CLUSTER_HANDLER_ELECTRICAL_CONDUCTIVITY,
     CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     CLUSTER_HANDLER_FLOW,
     CLUSTER_HANDLER_HUMIDITY,
@@ -1375,6 +1377,16 @@ class PM25(Sensor):
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     _attr_primary_weight = 1
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_CONDUCTIVITY)
+class ElectricalConductivity(Sensor):
+    """Electrical Conductivity sensor."""
+
+    _attribute_name = "measured_value"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CONDUCTIVITY
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfConductivity.MICROSIEMENS_PER_CM
 
 
 @MULTI_MATCH(cluster_handler_names="formaldehyde_concentration")
