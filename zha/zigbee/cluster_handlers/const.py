@@ -73,6 +73,7 @@ CLUSTER_HANDLER_SHADE: Final[str] = "shade"
 CLUSTER_HANDLER_SMARTENERGY_METERING: Final[str] = "smartenergy_metering"
 CLUSTER_HANDLER_TEMPERATURE: Final[str] = "temperature"
 CLUSTER_HANDLER_THERMOSTAT: Final[str] = "thermostat"
+CLUSTER_HANDLER_WIND_SPEED: Final[str] = "wind_speed"
 CLUSTER_HANDLER_ZDO: Final[str] = "zdo"
 CLUSTER_HANDLER_ZONE: Final[str] = "ias_zone"
 ZONE: Final[str] = CLUSTER_HANDLER_ZONE

@@ -20,6 +20,7 @@ from zigpy.zcl.clusters.measurement import (
     RelativeHumidity,
     SoilMoisture,
     TemperatureMeasurement,
+    WindSpeed,
 )
 
 from zha.zigbee.cluster_handlers import AttrReportConfig, ClusterHandler, registries
@@ -213,5 +214,17 @@ class ElectricalConductivityClusterHandler(ClusterHandler):
         AttrReportConfig(
             attr=ElectricalConductivity.AttributeDefs.measured_value.name,
             config=REPORT_CONFIG_DEFAULT,
+        ),
+    )
+
+
+@registries.CLUSTER_HANDLER_REGISTRY.register(WindSpeed.cluster_id)
+class WindSpeedClusterHandler(ClusterHandler):
+    """Wind Speed measurement cluster handler."""
+
+    REPORT_CONFIG = (
+        AttrReportConfig(
+            attr=WindSpeed.AttributeDefs.measured_value.name,
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.01),
         ),
     )
