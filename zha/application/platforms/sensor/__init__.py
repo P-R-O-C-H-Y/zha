@@ -155,9 +155,9 @@ class Sensor(PlatformEntity):
     PLATFORM = Platform.SENSOR
     _attribute_name: int | str | None = None
     _attribute_converter: typing.Callable[[typing.Any], typing.Any] | None = None
-    _decimals: int = 1
     _divisor: int = 1
     _multiplier: int | float = 1
+    _attr_suggested_display_precision: int = 1
     _attr_native_unit_of_measurement: str | None = None
     _attr_device_class: SensorDeviceClass | None = None
     _attr_state_class: SensorStateClass | None = None
@@ -252,7 +252,7 @@ class Sensor(PlatformEntity):
         return SensorEntityInfo(
             **super().info_object.__dict__,
             attribute=self._attribute_name,
-            decimals=self._decimals,
+            decimals=self._attr_suggested_display_precision,
             divisor=self._divisor,
             multiplier=self._multiplier,
             unit=(
@@ -301,9 +301,9 @@ class Sensor(PlatformEntity):
         self, value: int | enum.IntEnum
     ) -> datetime | int | float | str | None:
         """Numeric pass-through formatter."""
-        if self._decimals > 0:
+        if self._attr_suggested_display_precision > 0:
             return round(
-                float(value * self._multiplier) / self._divisor, self._decimals
+                float(value * self._multiplier) / self._divisor, self._attr_suggested_display_precision
             )
         return round(float(value * self._multiplier) / self._divisor)
 
@@ -658,7 +658,7 @@ class ElectricalMeasurement(PollableSensor):
 
         value = float(value * multiplier) / divisor
         if value < 100 and divisor > 1:
-            return round(value, self._decimals)
+            return round(value, self._attr_suggested_display_precision)
         return round(value)
 
 
@@ -1228,7 +1228,7 @@ class Pressure(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.PRESSURE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision: int = 0
     _attr_native_unit_of_measurement = UnitOfPressure.HPA
     _attr_primary_weight = 1
 
@@ -1314,7 +1314,7 @@ class CarbonDioxideConcentration(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CO2
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
     _attr_primary_weight = 1
@@ -1327,7 +1327,7 @@ class CarbonMonoxideConcentration(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.CO
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
     _attr_primary_weight = 1
@@ -1341,7 +1341,7 @@ class VOCLevel(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     _attr_primary_weight = 1
@@ -1360,7 +1360,7 @@ class PPBVOCLevel(Sensor):
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
     )
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
+    _attr_suggested_display_precision = 0
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_BILLION
     _attr_primary_weight = 1
@@ -1373,7 +1373,6 @@ class PM25(Sensor):
     _attribute_name = "measured_value"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.PM25
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _decimals = 0
     _multiplier = 1
     _attr_native_unit_of_measurement = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
     _attr_primary_weight = 1
@@ -1396,7 +1395,7 @@ class FormaldehydeConcentration(Sensor):
     _attribute_name = "measured_value"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_translation_key: str = "formaldehyde"
-    _decimals = 0
+    _attr_suggested_display_precision = 0
     _multiplier = 1e6
     _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
     _attr_primary_weight = 1
@@ -1709,7 +1708,7 @@ class AqaraSmokeDensityDbm(Sensor):
     _attr_translation_key: str = "smoke_density"
     _attr_native_unit_of_measurement = "dB/m"
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_suggested_display_precision: int = 3
+    _attr_suggested_display_precision = 3
 
 
 class SonoffIlluminationStates(types.enum8):
@@ -1740,7 +1739,7 @@ class PiHeatingDemand(Sensor):
     _attribute_name = "pi_heating_demand"
     _attr_translation_key: str = "pi_heating_demand"
     _attr_native_unit_of_measurement = PERCENTAGE
-    _decimals = 0
+    _attr_suggested_display_precision = 0
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
