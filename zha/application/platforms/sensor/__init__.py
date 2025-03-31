@@ -301,11 +301,7 @@ class Sensor(PlatformEntity):
         self, value: int | enum.IntEnum
     ) -> datetime | int | float | str | None:
         """Numeric pass-through formatter."""
-        if self._attr_suggested_display_precision > 0:
-            return round(
-                float(value * self._multiplier) / self._divisor, self._attr_suggested_display_precision
-            )
-        return round(float(value * self._multiplier) / self._divisor)
+        return float(value * self._multiplier) / self._divisor
 
 
 class TimestampSensor(Sensor):
