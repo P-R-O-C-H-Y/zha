@@ -16,6 +16,7 @@ from zigpy.quirks.v2 import EntityMetadata, EntityType
 from zigpy.types.named import EUI64
 
 from zha.application import Platform
+from zha.application.const import UniqueIdMigration
 from zha.const import STATE_CHANGED
 from zha.debounce import Debouncer
 from zha.event import EventBase
@@ -51,6 +52,7 @@ class BaseEntityInfo:
 
     fallback_name: str
     unique_id: str
+    migrate_unique_ids: frozenset[str]
     platform: str
     class_name: str
     translation_key: str | None
@@ -131,6 +133,7 @@ class BaseEntity(LogMixin, EventBase):
         super().__init__()
 
         self._unique_id: str = unique_id
+        self._migrate_unique_ids: list[str] = []
 
         self.__previous_state: Any = None
         self._tracked_tasks: list[asyncio.Task] = []
@@ -146,6 +149,10 @@ class BaseEntity(LogMixin, EventBase):
 
     def _is_supported(self) -> bool:
         """Return if the entity is supported for the device, internal."""
+        return True
+
+    def is_supported_in_list(self, entities: list[BaseEntity]) -> bool:
+        """Return if the entity is supported given all other entities."""
         return True
 
     def recompute_capabilities(self) -> None:
@@ -228,6 +235,12 @@ class BaseEntity(LogMixin, EventBase):
         """Return the unique id."""
         return self._unique_id
 
+    @final
+    @property
+    def migrate_unique_ids(self) -> frozenset[str]:
+        """Return the previous unique ids to migrate from, if any."""
+        return frozenset(self._migrate_unique_ids)
+
     @cached_property
     def identifiers(self) -> BaseIdentifiers:
         """Return a dict with the information necessary to identify this entity."""
@@ -242,6 +255,7 @@ class BaseEntity(LogMixin, EventBase):
 
         return BaseEntityInfo(
             unique_id=self.unique_id,
+            migrate_unique_ids=self.migrate_unique_ids,
             platform=self.PLATFORM,
             class_name=self.__class__.__name__,
             fallback_name=self.fallback_name,
@@ -332,24 +346,26 @@ class PlatformEntity(BaseEntity):
     # entities using the same cluster handler/cluster id for the entity.
     _unique_id_suffix: str | None = None
 
+    _migrate_platform_unique_ids: tuple[tuple[UniqueIdMigration, str]] | None = None
+
     def __init__(
         self,
-        unique_id: str,
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
         entity_metadata: EntityMetadata | None = None,
+        legacy_discovery_unique_id: str | None = None,
         **kwargs: Any,
     ):
         """Initialize the platform entity."""
         if entity_metadata is not None:
             self._init_from_quirks_metadata(entity_metadata)
 
-        if self._unique_id_suffix:
-            unique_id += f"-{self._unique_id_suffix}"
+        if self._unique_id_suffix is not None:
+            unique_id = f"{legacy_discovery_unique_id}-{self._unique_id_suffix}"
+        else:
+            unique_id = legacy_discovery_unique_id
 
-        # XXX: The ordering here matters: `_init_from_quirks_metadata` affects how
-        # the `unique_id` is computed!
         super().__init__(unique_id=unique_id, **kwargs)
 
         self._cluster_handlers: list[ClusterHandler] = cluster_handlers

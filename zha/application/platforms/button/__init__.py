@@ -11,7 +11,12 @@ from zigpy.quirks.v2 import WriteAttributeButtonMetadata, ZCLCommandButtonMetada
 
 from zha.application import Platform
 from zha.application.const import ENTITY_METADATA
-from zha.application.platforms import BaseEntityInfo, EntityCategory, PlatformEntity
+from zha.application.platforms import (
+    BaseEntity,
+    BaseEntityInfo,
+    EntityCategory,
+    PlatformEntity,
+)
 from zha.application.platforms.button.const import DEFAULT_DURATION, ButtonDeviceClass
 from zha.application.registries import PLATFORM_ENTITIES
 from zha.zigbee.cluster_handlers.const import CLUSTER_HANDLER_IDENTIFY
@@ -58,7 +63,6 @@ class Button(PlatformEntity):
 
     def __init__(
         self,
-        unique_id: str,
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
@@ -68,7 +72,7 @@ class Button(PlatformEntity):
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if ENTITY_METADATA in kwargs:
             self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
-        super().__init__(unique_id, cluster_handlers, endpoint, device, **kwargs)
+        super().__init__(cluster_handlers, endpoint, device, **kwargs)
 
     def _init_from_quirks_metadata(
         self, entity_metadata: ZCLCommandButtonMetadata
@@ -117,16 +121,10 @@ class IdentifyButton(Button):
     _kwargs = {}
     _args = [DEFAULT_DURATION]
 
-    def _is_supported(self) -> bool:
+    def is_supported_in_list(self, entities: list[BaseEntity]) -> bool:
+        """Check if this button is supported given the list of entities."""
         cls = type(self)
-        if any(
-            type(entity) is cls
-            for entity in self.device.platform_entities.values()
-            if entity is not self
-        ):
-            return False
-
-        return super()._is_supported()
+        return not any(type(entity) is cls for entity in entities)
 
 
 class WriteAttributeButton(PlatformEntity):
@@ -139,7 +137,6 @@ class WriteAttributeButton(PlatformEntity):
 
     def __init__(
         self,
-        unique_id: str,
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
@@ -149,7 +146,7 @@ class WriteAttributeButton(PlatformEntity):
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         if ENTITY_METADATA in kwargs:
             self._init_from_quirks_metadata(kwargs[ENTITY_METADATA])
-        super().__init__(unique_id, cluster_handlers, endpoint, device, **kwargs)
+        super().__init__(cluster_handlers, endpoint, device, **kwargs)
         self.recompute_capabilities()
 
     def _init_from_quirks_metadata(
