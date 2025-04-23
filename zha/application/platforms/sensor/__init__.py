@@ -137,6 +137,7 @@ class DeviceCounterEntityInfo(BaseEntityInfo):
     """Device counter entity info."""
 
     device_ieee: str
+    suggested_display_precision: int
     available: bool
     counter: str
     counter_value: int
@@ -412,6 +413,7 @@ class DeviceCounterSensor(BaseEntity):
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    _attr_suggested_display_precision = 0
 
     def __init__(
         self,
