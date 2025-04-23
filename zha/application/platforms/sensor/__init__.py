@@ -571,6 +571,7 @@ class Battery(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_suggested_display_precision: int = 0
     _attr_extra_state_attribute_names: set[str] = {
         "battery_size",
         "battery_quantity",
@@ -582,13 +583,12 @@ class Battery(Sensor):
         return PlatformEntity._is_supported(self) and not self.device.is_mains_powered
 
     @staticmethod
-    def formatter(value: int) -> int | None:  # pylint: disable=arguments-differ
+    def formatter(value: int) -> float | None:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value in (-1, 255):
             return None
-        value = round(value / 2)
-        return value
+        return value / 2
 
     @property
     def state(self) -> dict[str, Any]:
@@ -1060,6 +1060,7 @@ class SmartEnergySummation(SmartEnergyMetering):
     _attribute_name = "current_summ_delivered"
     _unique_id_suffix = "summation_delivered"
     _attr_translation_key: str = "summation_delivered"
+    _attr_suggested_display_precision: int = 3
 
     _ENTITY_DESCRIPTION_MAP = {
         0x00: SmartEnergySummationEntityDescription(
@@ -1123,11 +1124,10 @@ class SmartEnergySummation(SmartEnergyMetering):
         if self._cluster_handler.unit_of_measurement != 0:
             return self._cluster_handler.summa_formatter(value)
 
-        cooked = (
+        return (
             float(self._cluster_handler.multiplier * value)
             / self._cluster_handler.divisor
         )
-        return round(cooked, 3)
 
 
 @MULTI_MATCH(
