@@ -66,7 +66,6 @@ class EnumSelectEntity(PlatformEntity):
 
     def __init__(
         self,
-        unique_id: str,
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
@@ -76,7 +75,7 @@ class EnumSelectEntity(PlatformEntity):
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         self._attribute_name = self._enum.__name__
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
-        super().__init__(unique_id, cluster_handlers, endpoint, device, **kwargs)
+        super().__init__(cluster_handlers, endpoint, device, **kwargs)
 
     @functools.cached_property
     def info_object(self) -> EnumSelectInfo:
@@ -132,7 +131,7 @@ class NonZCLSelectEntity(EnumSelectEntity):
 class DefaultToneSelectEntity(NonZCLSelectEntity):
     """Representation of a ZHA default siren tone select entity."""
 
-    _unique_id_suffix = IasWd.Warning.WarningMode.__name__
+    _unique_id_suffix = "WarningMode"
     _enum = IasWd.Warning.WarningMode
     _attr_translation_key: str = "default_siren_tone"
 
@@ -141,7 +140,7 @@ class DefaultToneSelectEntity(NonZCLSelectEntity):
 class DefaultSirenLevelSelectEntity(NonZCLSelectEntity):
     """Representation of a ZHA default siren level select entity."""
 
-    _unique_id_suffix = IasWd.Warning.SirenLevel.__name__
+    _unique_id_suffix = "SirenLevel"
     _enum = IasWd.Warning.SirenLevel
     _attr_translation_key: str = "default_siren_level"
 
@@ -150,7 +149,7 @@ class DefaultSirenLevelSelectEntity(NonZCLSelectEntity):
 class DefaultStrobeLevelSelectEntity(NonZCLSelectEntity):
     """Representation of a ZHA default siren strobe level select entity."""
 
-    _unique_id_suffix = IasWd.StrobeLevel.__name__
+    _unique_id_suffix = "StrobeLevel"
     _enum = IasWd.StrobeLevel
     _attr_translation_key: str = "default_strobe_level"
 
@@ -159,7 +158,7 @@ class DefaultStrobeLevelSelectEntity(NonZCLSelectEntity):
 class DefaultStrobeSelectEntity(NonZCLSelectEntity):
     """Representation of a ZHA default siren strobe select entity."""
 
-    _unique_id_suffix = Strobe.__name__
+    _unique_id_suffix = "Strobe"
     _enum = Strobe
     _attr_translation_key: str = "default_strobe"
 
@@ -174,14 +173,13 @@ class ZCLEnumSelectEntity(PlatformEntity):
 
     def __init__(
         self,
-        unique_id: str,
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
         **kwargs: Any,
     ) -> None:
         """Init this select entity."""
-        super().__init__(unique_id, cluster_handlers, endpoint, device, **kwargs)
+        super().__init__(cluster_handlers, endpoint, device, **kwargs)
         self._cluster_handler: ClusterHandler = cluster_handlers[0]
         self._attr_options = [entry.name.replace("_", " ") for entry in self._enum]
 
@@ -270,7 +268,7 @@ class ZCLEnumSelectEntity(PlatformEntity):
 class StartupOnOffSelectEntity(ZCLEnumSelectEntity):
     """Representation of a ZHA startup onoff select entity."""
 
-    _unique_id_suffix = OnOff.StartUpOnOff.__name__
+    _unique_id_suffix = "StartUpOnOff"
     _attribute_name = "start_up_on_off"
     _enum = OnOff.StartUpOnOff
     _attr_translation_key: str = "start_up_on_off"

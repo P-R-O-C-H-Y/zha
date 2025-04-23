@@ -8,6 +8,9 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Final, TypeVar
 
+from zigpy.profiles.zha import PROFILE_ID as ZHA_PROFILE_ID
+from zigpy.profiles.zll import PROFILE_ID as ZLL_PROFILE_ID
+
 from zha.application import const
 from zha.async_ import gather_with_limited_concurrency
 from zha.zigbee.cluster_handlers import ClusterHandler
@@ -131,6 +134,14 @@ class Endpoint:
 
     def add_all_cluster_handlers(self) -> None:
         """Create and add cluster handlers for all input clusters."""
+        profile_id = self._zigpy_endpoint.profile_id
+        if profile_id not in (ZLL_PROFILE_ID, ZHA_PROFILE_ID):
+            _LOGGER.debug(
+                "Skipping endpoint, profile is not ZLL or ZHA: 0x%04X",
+                self._zigpy_endpoint.profile_id,
+            )
+            return
+
         for cluster_id, cluster in self.zigpy_endpoint.in_clusters.items():
             cluster_handler_classes = CLUSTER_HANDLER_REGISTRY.get(
                 cluster_id, {None: ClusterHandler}
@@ -184,6 +195,11 @@ class Endpoint:
         ) in CLIENT_CLUSTER_HANDLER_REGISTRY.items():
             cluster = self.zigpy_endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
+                _LOGGER.debug(
+                    "Creating client cluster handler for cluster id: %s class: %s",
+                    cluster_id,
+                    cluster_handler_class,
+                )
                 cluster_handler = cluster_handler_class(cluster, self)
                 self.client_cluster_handlers[cluster_handler.id] = cluster_handler
                 cluster_handler.on_add()

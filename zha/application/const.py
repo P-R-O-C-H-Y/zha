@@ -214,3 +214,14 @@ class Strobe(t.enum8):
 
     No_Strobe = 0x00
     Strobe = 0x01
+
+
+class UniqueIdMigration(enum.Enum):
+    """Migrateion root for unique ID."""
+
+    LEGACY_CLUSTER = "legacy_cluster"
+    LEGACY_ENDPOINT = "legacy_endpoint"
+
+    DEVICE = "device"
+    CLUSTER = "cluster"
+    ENDPOINT = "endpoint"

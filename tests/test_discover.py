@@ -1,6 +1,7 @@
 """Test ZHA device discovery."""
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable
 import enum
 import json
@@ -53,7 +54,7 @@ from zha.application import Platform
 from zha.application.discovery import ENDPOINT_PROBE, EndpointProbe
 from zha.application.gateway import Gateway
 from zha.application.helpers import DeviceOverridesConfiguration
-from zha.application.platforms import binary_sensor, sensor
+from zha.application.platforms import PlatformEntity, binary_sensor, sensor
 from zha.application.registries import SINGLE_INPUT_CLUSTER_DEVICE_CLASS
 from zha.zigbee.cluster_handlers import ClusterHandler
 from zha.zigbee.endpoint import Endpoint
@@ -114,10 +115,10 @@ def test_discover_by_device_type(device_type, platform, hit) -> None:
         assert len(entities) == 1
         assert entity_cls.mock_calls == [
             call(
-                unique_id=endpoint.unique_id,
                 endpoint=endpoint,
                 device=endpoint.device,
                 cluster_handlers=mock.sentinel.claimed,
+                legacy_discovery_unique_id=f"{endpoint.device.ieee}-{endpoint.id}",
             )
         ]
     else:
@@ -128,11 +129,12 @@ def test_discover_by_device_type(device_type, platform, hit) -> None:
 def test_discover_by_device_type_override() -> None:
     """Test entity discovery by device type overriding."""
 
+    device = mock.MagicMock()
+    device.ieee = zigpy.types.EUI64.convert("00:11:22:33:44:55:66:77")
+
     endpoint = mock.MagicMock(spec_set=Endpoint)
-    ep_mock = mock.PropertyMock()
-    ep_mock.return_value.profile_id = 0x0104
-    ep_mock.return_value.device_type = 0x0100
-    type(endpoint).zigpy_endpoint = ep_mock
+    endpoint.id = 1
+    endpoint.device = device
 
     entity_cls = mock.MagicMock()
 
@@ -147,7 +149,7 @@ def test_discover_by_device_type_override() -> None:
             ENDPOINT_PROBE.discover_by_device_type(
                 endpoint,
                 device_overrides={
-                    endpoint.unique_id: DeviceOverridesConfiguration(
+                    "00:11:22:33:44:55:66:77-1": DeviceOverridesConfiguration(
                         type=Platform.SIREN
                     )
                 },
@@ -157,10 +159,10 @@ def test_discover_by_device_type_override() -> None:
         assert len(entities) == 1
         assert entity_cls.mock_calls == [
             call(
-                unique_id=endpoint.unique_id,
                 endpoint=endpoint,
-                device=endpoint.device,
+                device=device,
                 cluster_handlers=mock.sentinel.claimed,
+                legacy_discovery_unique_id="00:11:22:33:44:55:66:77-1",
             )
         ]
 
@@ -190,10 +192,10 @@ def test_discover_probe_single_cluster() -> None:
 
     assert entity_cls.mock_calls == [
         call(
-            unique_id=f"{endpoint.unique_id}-{cluster_handler_mock.cluster.cluster_id}",
             endpoint=endpoint,
             device=endpoint.device,
             cluster_handlers=mock.sentinel.claimed,
+            legacy_discovery_unique_id=f"{endpoint.device.ieee}-{endpoint.id}-{cluster_handler_mock.cluster.cluster_id}",
         )
     ]
 
@@ -318,6 +320,7 @@ async def test_quirks_v2_entity_discovery(
                     zigpy.zcl.clusters.general.Scenes.cluster_id,
                 ],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         ieee="01:2d:6f:00:0a:90:69:e8",
@@ -438,6 +441,7 @@ async def test_quirks_v2_entity_discovery_e1_curtain(
                     zigpy.zcl.clusters.general.Ota.cluster_id,
                     XiaomiAqaraDriverE1.cluster_id,
                 ],
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         ieee="01:2d:6f:00:0a:90:69:e8",
@@ -520,6 +524,7 @@ def _get_test_device(
                     zigpy.zcl.clusters.general.Scenes.cluster_id,
                 ],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         ieee="01:2d:6f:00:0a:90:69:e8",
@@ -777,6 +782,30 @@ async def test_devices_from_files(
         )
         zha_device = await join_zigpy_device(zha_gateway, zigpy_device)
 
+        unique_id_collisions = defaultdict(list)
+        for entity in zha_device.platform_entities.values():
+            unique_id_collisions[entity.unique_id].append(entity)
+
+        for unique_id, entities in unique_id_collisions.items():
+            if len(entities) > 1:  # noqa: SIM102
+                # Keep track of known exceptions
+                if unique_id not in {"28:2c:02:bf:ff:ea:05:68-1-6"}:
+                    raise ValueError(
+                        f"Duplicate unique_id {unique_id} found in entities: {entities}"
+                    )
+
+        unique_id_migrations: dict[tuple[Platform, str], PlatformEntity] = {}
+        for entity in zha_device.platform_entities.values():
+            for old_unique_id in entity.migrate_unique_ids:
+                key = (entity.PLATFORM, old_unique_id)
+                if key in unique_id_migrations:
+                    raise ValueError(
+                        f"Duplicate unique_id {key} found in migration: "
+                        f"{unique_id_migrations[key]} and {entity}"
+                    )
+
+                unique_id_migrations[key] = entity
+
         assert zha_device is not None
 
         device_data = json.loads(
@@ -786,49 +815,65 @@ async def test_devices_from_files(
         # Get the zha_lib_entities from device_data
         zha_lib_entities = device_data.get("zha_lib_entities", [])
 
-        entity_count = 0
+        diagnostic_unique_ids = set()
+
         # Iterate over the platform_entities in device.platform_entities
-        for platform, entities in zha_lib_entities.items():
-            for entity in entities:
-                entity_count += 1
-                platform_entity = zha_device.platform_entities.get(
-                    (Platform(platform), entity["info_object"]["unique_id"])
-                )
-                assert platform_entity is not None
+        for platform_name, entities_info in zha_lib_entities.items():
+            platform = Platform(platform_name)
+
+            for info in entities_info:
+                unique_id = info["info_object"]["unique_id"]
+
+                # Migrate the unique ID if necessary
+                if (platform, unique_id) in unique_id_migrations:
+                    unique_id = unique_id_migrations[platform, unique_id].unique_id
+
+                combined_unique_id = f"{platform}.{unique_id}"
+                if combined_unique_id in diagnostic_unique_ids:
+                    raise ValueError(
+                        f"Diagnostic unique ID {combined_unique_id} duplicated!"
+                    )
+                else:
+                    diagnostic_unique_ids.add(combined_unique_id)
+
+                platform_entity = zha_device.platform_entities[platform, unique_id]
 
                 # Assert that the entity properties match those in the json data
                 assert (
                     platform_entity.translation_key
-                    == entity["info_object"]["translation_key"]
+                    == info["info_object"]["translation_key"]
                 )
                 assert (
                     platform_entity.fallback_name
-                    == entity["info_object"]["fallback_name"]
+                    == info["info_object"]["fallback_name"]
                 )
                 assert (
-                    platform_entity.device_class
-                    == entity["info_object"]["device_class"]
+                    platform_entity.device_class == info["info_object"]["device_class"]
                 )
-                assert (
-                    platform_entity.__class__.__name__ == entity["state"]["class_name"]
-                )
+                assert platform_entity.__class__.__name__ == info["state"]["class_name"]
                 assert (
                     platform_entity.entity_category
-                    == entity["info_object"]["entity_category"]
+                    == info["info_object"]["entity_category"]
                 )
-                assert (
-                    platform_entity.state_class == entity["info_object"]["state_class"]
-                )
+                assert platform_entity.state_class == info["info_object"]["state_class"]
                 assert (
                     platform_entity.entity_registry_enabled_default
-                    == entity["info_object"]["entity_registry_enabled_default"]
+                    == info["info_object"]["entity_registry_enabled_default"]
                 )
                 assert (
-                    platform_entity.state["class_name"] == entity["state"]["class_name"]
+                    platform_entity.state["class_name"] == info["state"]["class_name"]
                 )
 
-        # Assert that the number of entities in the device matches the number of entities in the json data
-        assert len(zha_device.platform_entities) == entity_count
+        # Ensure unique IDs remain intact
+        computed_unique_ids = {
+            f"{platform}.{entity.unique_id}"
+            for (platform, _), entity in zha_device.platform_entities.items()
+        }
+
+        assert len(diagnostic_unique_ids) == sum(
+            len(entities) for entities in zha_lib_entities.values()
+        )
+        assert computed_unique_ids == diagnostic_unique_ids
 
         # Assert identify called on join for devices that support it
         cluster_identify = _get_identify_cluster(zha_device.device)

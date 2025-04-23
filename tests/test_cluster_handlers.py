@@ -1077,7 +1077,14 @@ async def test_cluster_no_ep_attribute(
         zha_gateway,
         create_mock_zigpy_device(
             zha_gateway,
-            {1: {SIG_EP_INPUT: [0x042E], SIG_EP_OUTPUT: [], SIG_EP_TYPE: 0x1234}},
+            {
+                1: {
+                    SIG_EP_INPUT: [0x042E],
+                    SIG_EP_OUTPUT: [],
+                    SIG_EP_TYPE: 0x1234,
+                    SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
+                }
+            },
         ),
     )
 
@@ -1103,7 +1110,8 @@ async def test_configure_reporting(zha_gateway: Gateway) -> None:
             AttrReportConfig(attr="current_y", config=(1, 60, 4)),
         )
 
-    mock_ep = mock.AsyncMock(spec_set=zigpy.endpoint.Endpoint)
+    mock_ep = mock.AsyncMock()
+    mock_ep.profile_id = zigpy.profiles.zha.PROFILE_ID
     mock_ep.device.zdo = AsyncMock()
 
     cluster = zigpy.zcl.clusters.lighting.Color(mock_ep)
@@ -1150,6 +1158,7 @@ async def test_invalid_cluster_handler(zha_gateway: Gateway, caplog) -> None:  #
 
     mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
     zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+    zigpy_ep.profile_id = zigpy.profiles.zha.PROFILE_ID
 
     cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
     cluster.configure_reporting_multiple = AsyncMock(
@@ -1194,6 +1203,7 @@ async def test_standard_cluster_handler(
 
     mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
     zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+    zigpy_ep.profile_id = zigpy.profiles.zha.PROFILE_ID
 
     cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
     cluster.configure_reporting_multiple = AsyncMock(
@@ -1233,6 +1243,7 @@ async def test_quirk_id_cluster_handler(
 
     mock_device = mock.AsyncMock(spec_set=zigpy.device.Device)
     zigpy_ep = zigpy.endpoint.Endpoint(mock_device, endpoint_id=1)
+    zigpy_ep.profile_id = zigpy.profiles.zha.PROFILE_ID
 
     cluster = zigpy_ep.add_input_cluster(zigpy.zcl.clusters.lighting.Color.cluster_id)
     cluster.configure_reporting_multiple = AsyncMock(
@@ -1402,7 +1413,7 @@ async def test_zha_send_event_from_quirk(zha_gateway: Gateway):
 
     zha_device = await join_zigpy_device(zha_gateway, zigpy_device)
 
-    on_off_ch = zha_device.endpoints[1].client_cluster_handlers["1:0x0006"]
+    on_off_ch = zha_device.endpoints[1].client_cluster_handlers["1:0x0006_client"]
     assert on_off_ch is not None
 
     on_off_ch.emit_zha_event = MagicMock(wraps=on_off_ch.emit_zha_event)

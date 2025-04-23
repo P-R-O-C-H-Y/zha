@@ -649,14 +649,13 @@ class Light(PlatformEntity, BaseLight):
 
     def __init__(
         self,
-        unique_id: str,
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
         **kwargs,
     ) -> None:
         """Initialize the light."""
-        super().__init__(unique_id, cluster_handlers, endpoint, device, **kwargs)
+        super().__init__(cluster_handlers, endpoint, device, **kwargs)
         self._on_off_cluster_handler: ClusterHandler = self.cluster_handlers[
             CLUSTER_HANDLER_ON_OFF
         ]

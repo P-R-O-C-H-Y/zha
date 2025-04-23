@@ -19,6 +19,7 @@ import zigpy.zdo.types as zdo_t
 from tests.common import (
     SIG_EP_INPUT,
     SIG_EP_OUTPUT,
+    SIG_EP_PROFILE,
     SIG_EP_TYPE,
     create_mock_zigpy_device,
     get_entity,
@@ -58,6 +59,7 @@ def zigpy_device(
             SIG_EP_INPUT: in_clusters,
             SIG_EP_OUTPUT: [],
             SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
         }
     }
     return create_mock_zigpy_device(zha_gateway, endpoints, **kwargs)
@@ -74,6 +76,7 @@ def zigpy_device_mains(zha_gateway: Gateway, with_basic_cluster_handler: bool = 
             SIG_EP_INPUT: in_clusters,
             SIG_EP_OUTPUT: [],
             SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+            SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
         }
     }
     return create_mock_zigpy_device(
@@ -741,48 +744,21 @@ async def test_device_properties(
     assert zha_device.sw_version is None
 
     assert len(zha_device.platform_entities) == 3
-    assert (
-        Platform.SENSOR,
-        "00:0d:6f:00:0a:90:69:e7-3-0-lqi",
-    ) in zha_device.platform_entities
-    assert (
-        Platform.SENSOR,
-        "00:0d:6f:00:0a:90:69:e7-3-0-rssi",
-    ) in zha_device.platform_entities
-    assert (
-        Platform.SWITCH,
-        "00:0d:6f:00:0a:90:69:e7-3-6",
-    ) in zha_device.platform_entities
 
-    assert isinstance(
-        zha_device.platform_entities[
-            (Platform.SENSOR, "00:0d:6f:00:0a:90:69:e7-3-0-lqi")
-        ],
-        LQISensor,
-    )
-    assert isinstance(
-        zha_device.platform_entities[
-            (Platform.SENSOR, "00:0d:6f:00:0a:90:69:e7-3-0-rssi")
-        ],
-        RSSISensor,
-    )
-    assert isinstance(
-        zha_device.platform_entities[(Platform.SWITCH, "00:0d:6f:00:0a:90:69:e7-3-6")],
-        Switch,
-    )
+    lqi_entity = zha_device.platform_entities[
+        Platform.SENSOR, "00:0d:6f:00:0a:90:69:e7-3-0-lqi"
+    ]
+    assert type(lqi_entity) is LQISensor
 
-    assert (
-        zha_device.get_platform_entity(
-            Platform.SENSOR, "00:0d:6f:00:0a:90:69:e7-3-0-lqi"
-        )
-        is not None
-    )
-    assert isinstance(
-        zha_device.get_platform_entity(
-            Platform.SENSOR, "00:0d:6f:00:0a:90:69:e7-3-0-lqi"
-        ),
-        LQISensor,
-    )
+    rssi_entity = zha_device.platform_entities[
+        Platform.SENSOR, "00:0d:6f:00:0a:90:69:e7-3-0-rssi"
+    ]
+    assert type(rssi_entity) is RSSISensor
+
+    switch_entity = zha_device.platform_entities[
+        Platform.SWITCH, "00:0d:6f:00:0a:90:69:e7-3-6"
+    ]
+    assert isinstance(switch_entity, Switch)
 
     with pytest.raises(KeyError, match="Entity foo not found"):
         zha_device.get_platform_entity("bar", "foo")

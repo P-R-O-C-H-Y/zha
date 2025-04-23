@@ -34,12 +34,13 @@ from tests.common import (
     get_entity,
     join_zigpy_device,
     send_attributes_report,
+    zigpy_device_from_json,
 )
 from zha.application import Platform
 from zha.application.const import ZCL_INIT_ATTRS, ZHA_CLUSTER_HANDLER_READS_PER_REQ
 from zha.application.gateway import Gateway
 from zha.application.platforms import PlatformEntity, sensor
-from zha.application.platforms.sensor import DanfossSoftwareErrorCode
+from zha.application.platforms.sensor import DanfossSoftwareErrorCode, Temperature
 from zha.application.platforms.sensor.const import SensorDeviceClass, SensorStateClass
 from zha.units import PERCENTAGE, UnitOfEnergy, UnitOfPressure, UnitOfVolume
 from zha.zigbee.cluster_handlers import AttrReportConfig
@@ -751,7 +752,7 @@ async def test_electrical_measurement_init(
     await asyncio.sleep(entity.__polling_interval + 1)
     await zha_gateway.async_block_till_done(wait_background_tasks=True)
     assert (
-        "1-2820: skipping polling for updated state, available: False, allow polled requests: True"
+        "-1-2820: skipping polling for updated state, available: False, allow polled requests: True"
         in caplog.text
     )
 
@@ -1318,6 +1319,7 @@ async def zigpy_device_timestamp_sensor_v2_mock(
                 ],
                 SIG_EP_OUTPUT: [],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         manufacturer="Fake_Timestamp_sensor",
@@ -1419,6 +1421,7 @@ async def zigpy_device_aqara_sensor_v2_mock(
                 ],
                 SIG_EP_OUTPUT: [],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.OCCUPANCY_SENSOR,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         manufacturer="Fake_Manufacturer_sensor",
@@ -1662,6 +1665,7 @@ async def zigpy_device_danfoss_thermostat_mock(
                 ],
                 SIG_EP_OUTPUT: [general.Basic.cluster_id, general.Ota.cluster_id],
                 SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.THERMOSTAT,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         manufacturer="Danfoss",
@@ -1716,6 +1720,7 @@ async def test_quirks_sensor_attr_converter(zha_gateway: Gateway) -> None:
                 ],
                 SIG_EP_OUTPUT: [],
                 SIG_EP_TYPE: zha.DeviceType.SIMPLE_SENSOR,
+                SIG_EP_PROFILE: zigpy.profiles.zha.PROFILE_ID,
             }
         },
         manufacturer="manufacturer",
@@ -1748,3 +1753,34 @@ async def test_quirks_sensor_attr_converter(zha_gateway: Gateway) -> None:
 
     await send_attributes_report(zha_gateway, cluster, {"present_value": 0})
     assert entity.state["state"] == 100.0
+
+
+async def test_ignore_non_value(zha_gateway: Gateway) -> None:
+    """Test sensor updates ignoring ZCL datatype non-values."""
+
+    zigpy_dev = await zigpy_device_from_json(
+        zha_gateway.application_controller,
+        "tests/data/devices/third-reality-inc-3rsm0147z.json",
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+    cluster = zha_device.device.endpoints[1].temperature
+    entity = get_entity(zha_device, platform=Platform.SENSOR, entity_type=Temperature)
+
+    assert entity.state["state"] == 22.3
+
+    # Normal attribute report
+    await send_attributes_report(
+        zha_gateway,
+        cluster,
+        {measurement.TemperatureMeasurement.AttributeDefs.measured_value.id: 3000},
+    )
+    assert entity.state["state"] == 30.0
+
+    # Invalid attribute value, ignored
+    await send_attributes_report(
+        zha_gateway,
+        cluster,
+        {measurement.TemperatureMeasurement.AttributeDefs.measured_value.id: -0x8000},
+    )
+    assert entity.state["state"] is None
