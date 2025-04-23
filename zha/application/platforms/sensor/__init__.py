@@ -124,7 +124,7 @@ class SensorEntityInfo(BaseEntityInfo):
     """Sensor entity info."""
 
     attribute: str
-    suggested_display_precision: int
+    suggested_display_precision: int | None = None
     divisor: int
     multiplier: int
     unit: str | None = None
@@ -160,7 +160,7 @@ class Sensor(PlatformEntity):
     _attribute_converter: typing.Callable[[typing.Any], typing.Any] | None = None
     _divisor: int = 1
     _multiplier: int | float = 1
-    _attr_suggested_display_precision: int = 1
+    _attr_suggested_display_precision: int | None = None
     _attr_native_unit_of_measurement: str | None = None
     _attr_device_class: SensorDeviceClass | None = None
     _attr_state_class: SensorStateClass | None = None
