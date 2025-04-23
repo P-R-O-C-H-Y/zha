@@ -124,7 +124,7 @@ class SensorEntityInfo(BaseEntityInfo):
     """Sensor entity info."""
 
     attribute: str
-    decimals: int
+    suggested_display_precision: int | None = None
     divisor: int
     multiplier: int
     unit: str | None = None
@@ -263,7 +263,7 @@ class Sensor(PlatformEntity):
         return SensorEntityInfo(
             **super().info_object.__dict__,
             attribute=self._attribute_name,
-            decimals=self._attr_suggested_display_precision,
+            suggested_display_precision=self._attr_suggested_display_precision,
             divisor=self._divisor,
             multiplier=self._multiplier,
             unit=(
