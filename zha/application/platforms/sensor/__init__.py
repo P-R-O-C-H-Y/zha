@@ -614,6 +614,7 @@ class BaseElectricalMeasurement(PollableSensor):
 
     _use_custom_polling: bool = False
     _attribute_name = "active_power"
+    _attr_suggested_display_precision = 1
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement: str = UnitOfPower.WATT
