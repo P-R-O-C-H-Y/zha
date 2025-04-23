@@ -124,7 +124,7 @@ class SensorEntityInfo(BaseEntityInfo):
     """Sensor entity info."""
 
     attribute: str
-    suggested_display_precision: int | None = None
+    suggested_display_precision: int
     divisor: int
     multiplier: int
     unit: str | None = None
