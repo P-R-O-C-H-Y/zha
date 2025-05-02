@@ -490,7 +490,7 @@
           "unique_id": "ab:cd:ef:12:39:a2:73:55-1-13",
           "migrate_unique_ids": [],
           "platform": "number",
-          "class_name": "Number",
+          "class_name": "AnalogOutputNumber",
           "translation_key": null,
           "device_class": null,
           "state_class": null,
@@ -527,14 +527,14 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "engineering_units": null,
-          "application_type": 17235967,
-          "min_value": 0,
-          "max_value": 1023,
-          "step": null
+          "mode": "auto",
+          "native_max_value": 1023,
+          "native_min_value": 0,
+          "native_step": null,
+          "native_unit_of_measurement": null
         },
         "state": {
-          "class_name": "Number",
+          "class_name": "AnalogOutputNumber",
           "available": true,
           "state": 0.0
         }
