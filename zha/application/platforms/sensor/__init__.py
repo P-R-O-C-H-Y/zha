@@ -33,11 +33,15 @@ from zha.application.platforms import (
 )
 from zha.application.platforms.climate.const import HVACAction
 from zha.application.platforms.helpers import validate_device_class
+from zha.application.platforms.number.bacnet import BACNET_UNITS_TO_HA_UNITS
 from zha.application.platforms.sensor.const import (
+    ANALOG_INPUT_APPTYPE_DEV_CLASS,
+    ANALOG_INPUT_APPTYPE_UNITS,
     UNIX_EPOCH_TO_ZCL_EPOCH,
     SensorDeviceClass,
     SensorStateClass,
 )
+from zha.application.platforms.sensor.helpers import resolution_to_decimal_precision
 from zha.application.registries import PLATFORM_ENTITIES
 from zha.decorators import periodic
 from zha.units import (
@@ -198,6 +202,12 @@ class Sensor(PlatformEntity):
                 self.handle_cluster_handler_attribute_updated,
             )
         )
+        if (
+            hasattr(self._cluster_handler, "description")
+            and self._cluster_handler.description is not None
+        ):
+            self._attr_translation_key = None
+            self._attr_fallback_name: str = self._cluster_handler.description
 
     def _is_supported(self) -> bool:
         if (
@@ -564,11 +574,61 @@ class EnumSensor(Sensor):
     manufacturers="Digi",
     stop_on_match_group=CLUSTER_HANDLER_ANALOG_INPUT,
 )
-class AnalogInput(Sensor):
+class DigiAnalogInput(Sensor):
     """Sensor that displays analog input values."""
 
     _attribute_name = "present_value"
     _attr_translation_key: str = "analog_input"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_ANALOG_INPUT)
+class AnalogInputSensor(Sensor):
+    """Sensor that displays analog input values."""
+
+    _attribute_name = "present_value"
+    _unique_id_suffix = "analog_input"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def recompute_capabilities(self) -> None:
+        """Recompute capabilities."""
+        super().recompute_capabilities()
+
+        self._attr_fallback_name = self._cluster_handler.description
+
+        if self._cluster_handler.application_type is not None:
+            # The application type encodes a tiny bit more info but it's mostly
+            # irrelevant, just use the `type` sub-field
+            app_type = self._cluster_handler.application_type.type
+            self._attr_device_class = ANALOG_INPUT_APPTYPE_DEV_CLASS.get(app_type)
+
+            # Application type units take precedence
+            self._attr_native_unit_of_measurement = ANALOG_INPUT_APPTYPE_UNITS.get(
+                app_type
+            )
+        else:
+            self._attr_native_unit_of_measurement = BACNET_UNITS_TO_HA_UNITS.get(
+                self._cluster_handler.engineering_units
+            )
+
+        # Resolution indicates the minimum change in value that can be detected
+        if self._cluster_handler.resolution is not None:
+            self._attr_suggested_display_precision = resolution_to_decimal_precision(
+                self._cluster_handler.resolution
+            )
+
+    def _is_supported(self) -> bool:
+        """Return True if this sensor is supported."""
+        if self._cluster_handler.description is None:
+            return False
+
+        # The units are determined by one of these
+        if (
+            self._cluster_handler.application_type is None
+            and self._cluster_handler.engineering_units is None
+        ):
+            return False
+
+        return super()._is_supported()
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_POWER_CONFIGURATION)

@@ -121,6 +121,8 @@ async def test_number(
     assert cluster.read_attributes.call_count == 3
 
     assert entity.description == "PWM1"
+    assert entity.fallback_name == "PWM1"
+    assert entity.translation_key is None
 
     # test that the state is 15.0
     assert entity.state["state"] == 15.0
@@ -177,6 +179,35 @@ async def test_number(
         {"present_value": 30}, manufacturer=None
     )
     assert entity.state["state"] == 30.0
+
+
+async def test_number_missing_description_attr(
+    zha_gateway: Gateway,
+) -> None:
+    """Test zha number platform - missing description attribute."""
+    zigpy_analog_output_device = create_mock_zigpy_device(
+        zha_gateway, ZIGPY_ANALOG_OUTPUT_DEVICE
+    )
+    cluster: general.AnalogOutput = zigpy_analog_output_device.endpoints.get(
+        1
+    ).analog_output
+    cluster.PLUGGED_ATTR_READS = {
+        "max_present_value": 100.0,
+        "min_present_value": 1.0,
+        "relinquish_default": 50.0,
+        "resolution": 1.1,
+        "engineering_units": 98,
+        "application_type": 4 * 0x10000,
+    }
+    update_attribute_cache(cluster)
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_analog_output_device)
+
+    entity: PlatformEntity = get_entity(zha_device, platform=Platform.NUMBER)
+    assert isinstance(entity, PlatformEntity)
+
+    assert entity.description is None
+    assert entity.fallback_name is None
+    assert entity.translation_key == "number"
 
 
 @pytest.mark.parametrize(

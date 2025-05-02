@@ -1874,12 +1874,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "fading_time",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-2-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -1929,12 +1929,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "large_sensitivity",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-3-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -1984,12 +1984,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "large_distance",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-4-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -2039,12 +2039,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "small_sensitivity",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-5-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -2094,12 +2094,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "small_distance",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-6-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -2149,12 +2149,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "static_sensitivity",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-7-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -2204,12 +2204,12 @@
       },
       {
         "info_object": {
-          "fallback_name": null,
+          "fallback_name": "static_distance",
           "unique_id": "ab:cd:ef:12:94:85:f7:5f-8-13",
           "migrate_unique_ids": [],
           "platform": "number",
           "class_name": "Number",
-          "translation_key": "number",
+          "translation_key": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
