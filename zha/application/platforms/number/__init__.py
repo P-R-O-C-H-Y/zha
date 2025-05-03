@@ -126,8 +126,6 @@ class BaseNumber(PlatformEntity):
 class AnalogOutputNumber(BaseNumber):
     """Representation of a ZHA Number entity."""
 
-    _attr_translation_key: str = "number"
-
     def __init__(
         self,
         cluster_handlers: list[ClusterHandler],
@@ -158,10 +156,7 @@ class AnalogOutputNumber(BaseNumber):
         else:
             self._attr_icon = None
 
-        if analog_output.description is not None:
-            self._attr_fallback_name = analog_output.description
-        else:
-            self._attr_fallback_name = None
+        self._attr_fallback_name = analog_output.description
 
     def on_add(self) -> None:
         """Run when entity is added."""
@@ -172,14 +167,6 @@ class AnalogOutputNumber(BaseNumber):
                 self.handle_cluster_handler_attribute_updated,
             )
         )
-        if (
-            hasattr(self._analog_output_cluster_handler, "description")
-            and self._analog_output_cluster_handler.description is not None
-        ):
-            self._attr_translation_key = None
-            self._attr_fallback_name: str = (
-                self._analog_output_cluster_handler.description
-            )
 
     @property
     def native_value(self) -> float | None:

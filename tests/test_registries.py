@@ -13,6 +13,7 @@ import zigpy.quirks as zigpy_quirks
 from zha.application.const import ATTR_QUIRK_ID
 from zha.application.platforms import PlatformEntity
 from zha.application.platforms.binary_sensor import BinaryInputWithDescription, IASZone
+from zha.application.platforms.number import AnalogOutputNumber
 from zha.application.platforms.sensor import AnalogInputSensor
 from zha.application.registries import (
     PLATFORM_ENTITIES,
@@ -578,4 +579,5 @@ def test_entity_names() -> None:
                     IASZone,
                     BinaryInputWithDescription,
                     AnalogInputSensor,
+                    AnalogOutputNumber,
                 )

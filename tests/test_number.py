@@ -204,7 +204,7 @@ async def test_number_missing_description_attr(
     assert isinstance(entity, PlatformEntity)
 
     assert entity.fallback_name is None
-    assert entity.translation_key == "number"
+    assert entity.translation_key is None
 
 
 @pytest.mark.parametrize(
