@@ -909,6 +909,45 @@ class ElectricalMeasurementPowerFactorPhC(ElectricalMeasurementPowerFactor):
     _attr_max_attribute_name = "power_factor_max_ph_c"
 
 
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementDCVoltage(BaseElectricalMeasurement):
+    """DC Voltage measurement."""
+
+    _attribute_name = "dc_voltage"
+    _unique_id_suffix = "dc_voltage"
+    _attr_translation_key: str = "dc_voltage"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
+    _divisor_attribute_name = "dc_voltage_divisor"
+    _multiplier_attribute_name = "dc_voltage_multiplier"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementDCCurrent(BaseElectricalMeasurement):
+    """DC Current measurement."""
+
+    _attribute_name = "dc_current"
+    _unique_id_suffix = "dc_current"
+    _attr_translation_key: str = "dc_current"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    _divisor_attribute_name = "dc_current_divisor"
+    _multiplier_attribute_name = "dc_current_multiplier"
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementDCPower(BaseElectricalMeasurement):
+    """DC Power measurement."""
+
+    _attribute_name = "dc_power"
+    _unique_id_suffix = "dc_power"
+    _attr_translation_key: str = "dc_power"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _divisor_attribute_name = "dc_power_divisor"
+    _multiplier_attribute_name = "dc_power_multiplier"
+
+
 @MULTI_MATCH(
     generic_ids=CLUSTER_HANDLER_ST_HUMIDITY_CLUSTER,
     stop_on_match_group=CLUSTER_HANDLER_HUMIDITY,
