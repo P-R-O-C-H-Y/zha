@@ -1487,10 +1487,7 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "attribute": null,
           "suggested_display_precision": null,
-          "divisor": 1,
-          "multiplier": 1,
           "unit": null
         },
         "state": {
@@ -1542,10 +1539,7 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "attribute": null,
           "suggested_display_precision": null,
-          "divisor": 1,
-          "multiplier": 1,
           "unit": "dBm"
         },
         "state": {
@@ -1607,7 +1601,7 @@
           "installed_version": "0x20026a30",
           "in_progress": false,
           "update_percentage": null,
-          "latest_version": "0x20026a30",
+          "latest_version": null,
           "release_summary": null,
           "release_notes": null,
           "release_url": null

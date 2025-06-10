@@ -1259,10 +1259,7 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "attribute": null,
           "suggested_display_precision": null,
-          "divisor": 1,
-          "multiplier": 1,
           "unit": null
         },
         "state": {
@@ -1314,10 +1311,7 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "attribute": null,
           "suggested_display_precision": null,
-          "divisor": 1,
-          "multiplier": 1,
           "unit": "dBm"
         },
         "state": {
@@ -1369,10 +1363,7 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "attribute": "battery_percentage_remaining",
           "suggested_display_precision": 0,
-          "divisor": 1,
-          "multiplier": 1,
           "unit": "%"
         },
         "state": {
@@ -1424,10 +1415,7 @@
           "endpoint_id": 1,
           "available": true,
           "group_id": null,
-          "attribute": "window_covering_type",
           "suggested_display_precision": null,
-          "divisor": 1,
-          "multiplier": 1,
           "unit": null
         },
         "state": {
@@ -1547,7 +1535,7 @@
           "installed_version": "0x12046780",
           "in_progress": false,
           "update_percentage": null,
-          "latest_version": "0x12046780",
+          "latest_version": null,
           "release_summary": null,
           "release_notes": null,
           "release_url": null
