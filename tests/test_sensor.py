@@ -89,9 +89,15 @@ def elec_measurement_zigpy_device_mock(
         "ac_power_multiplier": 1,
         "ac_voltage_divisor": 10,
         "ac_voltage_multiplier": 1,
-        "measurement_type": 8,
+        "measurement_type": 0x48,  # PHASE_A_MEASUREMENT | DC_MEASUREMENT
         "power_divisor": 10,
         "power_multiplier": 1,
+        "dc_voltage_divisor": 10,
+        "dc_voltage_multiplier": 1,
+        "dc_current_divisor": 10,
+        "dc_current_multiplier": 1,
+        "dc_power_divisor": 10,
+        "dc_power_multiplier": 1,
     }
     return zigpy_device
 
@@ -464,6 +470,67 @@ async def async_test_change_source_timestamp(
     assert entity.state["state"] == datetime(2024, 10, 4, 11, 15, 15, tzinfo=UTC)
 
 
+async def async_test_em_dc_voltage(
+    zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
+) -> None:
+    """Test electrical measurement DC Voltage sensor."""
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0100: 1234})
+    assert_state(entity, 123.4, "V")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0100: 234})
+    assert_state(entity, 23.4, "V")
+
+    await send_attributes_report(zha_gateway, cluster, {"dc_voltage_divisor": 100})
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0100: 2236})
+    assert_state(entity, 22.36, "V")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0102: 888})
+    assert entity.state["dc_voltage_max"] == 8.88
+
+
+async def async_test_em_dc_current(
+    zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
+) -> None:
+    """Test electrical measurement DC Current sensor."""
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0103: 1234})
+    assert_state(entity, 1.234, "A")
+
+    await send_attributes_report(zha_gateway, cluster, {"dc_current_divisor": 10})
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0103: 236})
+    assert_state(entity, 23.6, "A")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0103: 1236})
+    assert_state(entity, 123.6, "A")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0105: 88})
+    assert entity.state["dc_current_max"] == 8.8
+
+
+async def async_test_em_dc_power(
+    zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
+) -> None:
+    """Test electrical measurement DC Power sensor."""
+    # update divisor cached value
+    await send_attributes_report(zha_gateway, cluster, {"dc_power_divisor": 1})
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0106: 100})
+    assert_state(entity, 100, "W")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0106: 99})
+    assert_state(entity, 99, "W")
+
+    await send_attributes_report(zha_gateway, cluster, {"dc_power_divisor": 10})
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0106: 1000})
+    assert_state(entity, 100, "W")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0106: 99})
+    assert_state(entity, 9.9, "W")
+
+    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0108: 88})
+    assert entity.state["dc_power_max"] == 8.8
+
+
 @pytest.mark.parametrize(
     "cluster_id, entity_type, test_func, read_plug, unsupported_attrs",
     (
@@ -652,6 +719,27 @@ async def async_test_change_source_timestamp(
             async_test_change_source_timestamp,
             None,
             None,
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            sensor.ElectricalMeasurementDCVoltage,
+            async_test_em_dc_voltage,
+            {"dc_voltage_divisor": 10, "dc_voltage_multiplier": 1},
+            {"active_power", "apparent_power", "rms_current", "rms_voltage"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            sensor.ElectricalMeasurementDCCurrent,
+            async_test_em_dc_current,
+            {"dc_current_divisor": 1000, "dc_current_multiplier": 1},
+            {"active_power", "apparent_power", "rms_current", "rms_voltage"},
+        ),
+        (
+            homeautomation.ElectricalMeasurement.cluster_id,
+            sensor.ElectricalMeasurementDCPower,
+            async_test_em_dc_power,
+            {"dc_power_divisor": 1000, "dc_power_multiplier": 1},
+            {"active_power", "apparent_power", "rms_current", "rms_voltage"},
         ),
     ),
 )
