@@ -868,6 +868,61 @@ class Device(LogMixin, EventBase):
 
         return False
 
+    def _apply_entity_metadata_changes(self, entity: PlatformEntity) -> None:
+        """Apply entity metadata changes from quirks v2."""
+        if self.quirk_metadata is None:
+            return
+
+        for meta in self.quirk_metadata.changed_entity_metadata:
+            if meta.unique_id_suffix is not None and not entity.unique_id.endswith(
+                meta.unique_id_suffix
+            ):
+                continue
+
+            if meta.endpoint_id is not None and entity.endpoint.id != meta.endpoint_id:
+                continue
+
+            if meta.cluster_id is not None and not any(
+                cluster_handler.cluster.cluster_id == meta.cluster_id
+                and cluster_handler.cluster.cluster_type == meta.cluster_type
+                for cluster_handler in entity.cluster_handlers.values()
+            ):
+                continue
+
+            if meta.function is not None and not meta.function(entity):
+                continue
+
+            # Apply metadata changes
+            _LOGGER.debug(
+                "Applying metadata changes from %s to entity %s", meta, entity
+            )
+
+            if meta.new_primary is not None:
+                entity._attr_primary = meta.new_primary
+
+            if meta.new_unique_id is not None:
+                entity._unique_id = meta.new_unique_id
+
+            if meta.new_translation_key is not None:
+                entity._attr_translation_key = meta.new_translation_key
+
+            if meta.new_device_class is not None:
+                entity._attr_device_class = meta.new_device_class
+
+            if meta.new_state_class is not None:
+                entity._attr_state_class = meta.new_state_class
+
+            if meta.new_entity_category is not None:
+                entity._attr_entity_category = meta.new_entity_category
+
+            if meta.new_entity_registry_enabled_default is not None:
+                entity._attr_entity_registry_enabled_default = (
+                    meta.new_entity_registry_enabled_default
+                )
+
+            if meta.new_fallback_name is not None:
+                entity._attr_fallback_name = meta.new_fallback_name
+
     def _discover_new_entities(self) -> None:
         if self.is_active_coordinator:
             new_entities = discovery.DEVICE_PROBE.discover_coordinator_device_entities(
@@ -880,6 +935,9 @@ class Device(LogMixin, EventBase):
         for entity in new_entities:
             if self._is_entity_removed_by_quirk(entity):
                 continue
+
+            # Apply any metadata changes from quirks v2
+            self._apply_entity_metadata_changes(entity)
 
             entity.on_add()
             self._pending_entities.append(entity)
