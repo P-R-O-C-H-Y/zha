@@ -186,6 +186,7 @@ def zigpy_device_from_diagnostics(
 
     # Neighbors contain EUI64 addresses and EPIDs
     zha_data["neighbors"] = []
+    zha_data["routes"] = []
 
     # Use our normal testing function to load the data
     return zigpy_device_from_device_data(app, zha_data, patch_cluster)
