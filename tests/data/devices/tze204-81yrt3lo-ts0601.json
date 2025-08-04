@@ -1295,8 +1295,7 @@
           "measurement_type": "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT"
         },
         "extra_state_attributes": [
-          "measurement_type",
-          null
+          "measurement_type"
         ]
       },
       {
@@ -1352,8 +1351,7 @@
           "measurement_type": "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT"
         },
         "extra_state_attributes": [
-          "measurement_type",
-          null
+          "measurement_type"
         ]
       },
       {
@@ -1757,8 +1755,7 @@
           "measurement_type": "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT"
         },
         "extra_state_attributes": [
-          "measurement_type",
-          null
+          "measurement_type"
         ]
       },
       {
@@ -1814,8 +1811,7 @@
           "measurement_type": "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT"
         },
         "extra_state_attributes": [
-          "measurement_type",
-          null
+          "measurement_type"
         ]
       },
       {
@@ -2162,8 +2158,7 @@
           "measurement_type": "ACTIVE_MEASUREMENT, REACTIVE_MEASUREMENT, APPARENT_MEASUREMENT, PHASE_A_MEASUREMENT"
         },
         "extra_state_attributes": [
-          "measurement_type",
-          null
+          "measurement_type"
         ]
       },
       {

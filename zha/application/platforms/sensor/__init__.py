@@ -683,8 +683,9 @@ class BaseElectricalMeasurement(PollableSensor):
         super().__init__(cluster_handlers, endpoint, device, **kwargs)
         self._attr_extra_state_attribute_names: set[str] = {
             "measurement_type",
-            self._attr_max_attribute_name,  # None values are ignored in HA
         }
+        if self._attr_max_attribute_name is not None:
+            self._attr_extra_state_attribute_names.add(self._attr_max_attribute_name)
 
     @property
     def state(self) -> dict[str, Any]:

@@ -979,8 +979,7 @@
           "state": null
         },
         "extra_state_attributes": [
-          "measurement_type",
-          null
+          "measurement_type"
         ]
       },
       {
