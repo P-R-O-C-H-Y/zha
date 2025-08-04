@@ -710,7 +710,7 @@
           "unique_id": "70:ac:08:ff:fe:ef:c4:b7-1-2820",
           "migrate_unique_ids": [],
           "platform": "sensor",
-          "class_name": "ElectricalMeasurement",
+          "class_name": "ReportingElectricalMeasurement",
           "translation_key": null,
           "device_class": "power",
           "state_class": "measurement",
@@ -751,7 +751,7 @@
           "unit": "W"
         },
         "state": {
-          "class_name": "ElectricalMeasurement",
+          "class_name": "ReportingElectricalMeasurement",
           "available": true,
           "state": 0.0,
           "measurement_type": "ACTIVE_MEASUREMENT"

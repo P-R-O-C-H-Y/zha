@@ -2631,7 +2631,7 @@
           "unique_id": "ab:cd:ef:12:dc:41:3c:40-1-2820",
           "migrate_unique_ids": [],
           "platform": "sensor",
-          "class_name": "ElectricalMeasurement",
+          "class_name": "ReportingElectricalMeasurement",
           "translation_key": null,
           "device_class": "power",
           "state_class": "measurement",
@@ -2672,7 +2672,7 @@
           "unit": "W"
         },
         "state": {
-          "class_name": "ElectricalMeasurement",
+          "class_name": "ReportingElectricalMeasurement",
           "available": true,
           "state": 0.0
         }

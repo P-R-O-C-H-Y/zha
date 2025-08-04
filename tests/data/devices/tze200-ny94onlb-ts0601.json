@@ -1015,7 +1015,7 @@
           "unique_id": "ab:cd:ef:12:58:8c:89:ff-1-2820-active_power_ph_b",
           "migrate_unique_ids": [],
           "platform": "sensor",
-          "class_name": "ElectricalMeasurementRMSActivePowerPhB",
+          "class_name": "ElectricalMeasurementActivePowerPhB",
           "translation_key": "active_power_ph_b",
           "device_class": "power",
           "state_class": "measurement",
@@ -1056,7 +1056,7 @@
           "unit": "W"
         },
         "state": {
-          "class_name": "ElectricalMeasurementRMSActivePowerPhB",
+          "class_name": "ElectricalMeasurementActivePowerPhB",
           "available": true,
           "state": 266.0
         }
@@ -1067,7 +1067,7 @@
           "unique_id": "ab:cd:ef:12:58:8c:89:ff-1-2820-active_power_ph_c",
           "migrate_unique_ids": [],
           "platform": "sensor",
-          "class_name": "ElectricalMeasurementRMSActivePowerPhC",
+          "class_name": "ElectricalMeasurementActivePowerPhC",
           "translation_key": "active_power_ph_c",
           "device_class": "power",
           "state_class": "measurement",
@@ -1108,7 +1108,7 @@
           "unit": "W"
         },
         "state": {
-          "class_name": "ElectricalMeasurementRMSActivePowerPhC",
+          "class_name": "ElectricalMeasurementActivePowerPhC",
           "available": true,
           "state": 70.0
         }
