@@ -507,7 +507,7 @@ class SonoffPresenceSenorClusterHandler(ClusterHandler):
 class DanfossThermostatClusterHandler(ThermostatClusterHandler):
     """Thermostat cluster handler for the Danfoss TRV and derivatives."""
 
-    REPORT_CONFIG = (
+    REPORT_CONFIG = (  # type: ignore[assignment]
         *ThermostatClusterHandler.REPORT_CONFIG,
         AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),

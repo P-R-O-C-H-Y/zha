@@ -6,7 +6,7 @@ from asyncio import Task
 from dataclasses import dataclass
 import datetime as dt
 import functools
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from zigpy.zcl.clusters.hvac import FanMode, RunningState, SystemMode
 
@@ -46,6 +46,7 @@ from zha.zigbee.cluster_handlers.const import (
     CLUSTER_HANDLER_FAN,
     CLUSTER_HANDLER_THERMOSTAT,
 )
+from zha.zigbee.cluster_handlers.hvac import FanClusterHandler, ThermostatClusterHandler
 
 if TYPE_CHECKING:
     from zha.zigbee.cluster_handlers import ClusterHandler
@@ -105,14 +106,14 @@ class Thermostat(PlatformEntity):
     ):
         """Initialize ZHA Thermostat instance."""
         super().__init__(cluster_handlers, endpoint, device, **kwargs)
-        self._preset = Preset.NONE
+        self._preset: Preset | str = Preset.NONE
         self._presets: list[Preset | str] = []
 
-        self._thermostat_cluster_handler: ClusterHandler = self.cluster_handlers.get(
-            CLUSTER_HANDLER_THERMOSTAT
+        self._thermostat_cluster_handler: ThermostatClusterHandler = cast(
+            ThermostatClusterHandler, self.cluster_handlers[CLUSTER_HANDLER_THERMOSTAT]
         )
-        self._fan_cluster_handler: ClusterHandler = self.cluster_handlers.get(
-            CLUSTER_HANDLER_FAN
+        self._fan_cluster_handler: FanClusterHandler | None = cast(
+            FanClusterHandler | None, self.cluster_handlers.get(CLUSTER_HANDLER_FAN)
         )
 
         self._supported_features = ClimateEntityFeature(0)
