@@ -475,11 +475,17 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(IKEA_REMOTE_CLUSTER)
-@registries.CLUSTER_HANDLER_REGISTRY.register(IKEA_REMOTE_CLUSTER)
-class IkeaRemoteClusterHandler(ClusterHandler):
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(IKEA_REMOTE_CLUSTER)
+class IkeaRemoteClientClusterHandler(ClientClusterHandler):
     """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()
+
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+        # Do not emit ZHA events when receiving a client command, this duplicates the
+        # existing event sent by the quirk.
+        pass
 
 
 @registries.CLUSTER_HANDLER_REGISTRY.register(
