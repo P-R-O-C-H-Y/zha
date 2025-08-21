@@ -666,14 +666,11 @@ class BaseElectricalMeasurement(PollableSensor):
     """Base class for electrical measurement."""
 
     _use_custom_polling: bool = False
-    _attribute_name = "active_power"
     _attr_suggested_display_precision = 1
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
+    _attr_max_attribute_name: str | None = None
+    _divisor_attribute_name: str | None = None
+    _multiplier_attribute_name: str | None = None
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _attr_native_unit_of_measurement: str = UnitOfPower.WATT
-    _divisor_attribute_name: str | None = "ac_power_divisor"
-    _multiplier_attribute_name: str | None = "ac_power_multiplier"
-    _attr_max_attribute_name: str = None
 
     def __init__(
         self,
@@ -684,15 +681,9 @@ class BaseElectricalMeasurement(PollableSensor):
     ) -> None:
         """Init this sensor."""
         super().__init__(cluster_handlers, endpoint, device, **kwargs)
-        self._attr_extra_state_attribute_names: set[str] = {
-            "measurement_type",
-            self._max_attribute_name,
-        }
-
-    @property
-    def _max_attribute_name(self) -> str:
-        """Return the max attribute name."""
-        return self._attr_max_attribute_name or f"{self._attribute_name}_max"
+        self._attr_extra_state_attribute_names: set[str] = {"measurement_type"}
+        if self._attr_max_attribute_name is not None:
+            self._attr_extra_state_attribute_names.add(self._attr_max_attribute_name)
 
     @property
     def state(self) -> dict[str, Any]:
@@ -701,8 +692,7 @@ class BaseElectricalMeasurement(PollableSensor):
         if self._cluster_handler.measurement_type is not None:
             response["measurement_type"] = self._cluster_handler.measurement_type
 
-        max_attr_name = self._max_attribute_name
-        if not hasattr(self._cluster_handler.cluster.AttributeDefs, max_attr_name):
+        if (max_attr_name := self._attr_max_attribute_name) is None:
             return response
 
         if (max_v := self._cluster_handler.cluster.get(max_attr_name)) is not None:
@@ -718,7 +708,7 @@ class BaseElectricalMeasurement(PollableSensor):
         return getattr(self._cluster_handler, self._multiplier_attribute_name)
 
     @_multiplier.setter
-    def _multiplier(self, value: int | None) -> None:
+    def _multiplier(self, value: int | float | None) -> None:
         raise AttributeError("Cannot set multiplier directly")
 
     @property
@@ -729,8 +719,22 @@ class BaseElectricalMeasurement(PollableSensor):
         return getattr(self._cluster_handler, self._divisor_attribute_name)
 
     @_divisor.setter
-    def _divisor(self, value: int | None) -> None:
+    def _divisor(self, value: int | float | None) -> None:
         raise AttributeError("Cannot set divisor directly")
+
+
+# this entity will be created by ReportingEM or PolledEM class below
+class ElectricalMeasurementActivePower(BaseElectricalMeasurement):
+    """Active power phase measurement."""
+
+    _attribute_name = "active_power"
+    # no unique id suffix for backwards compatibility
+    # no translation key due to device class
+    _attr_max_attribute_name = "active_power_max"
+    _divisor_attribute_name = "ac_power_divisor"
+    _multiplier_attribute_name = "ac_power_multiplier"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement: str = UnitOfPower.WATT
 
 
 @MULTI_MATCH(
@@ -738,8 +742,8 @@ class BaseElectricalMeasurement(PollableSensor):
     stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     models={"VZM31-SN", "SP 234", "outletv4", "INSPELNING Smart plug"},
 )
-class ElectricalMeasurement(BaseElectricalMeasurement):
-    """Active power measurement."""
+class ReportingElectricalMeasurement(ElectricalMeasurementActivePower):
+    """Unpolled active power measurement."""
 
     pass
 
@@ -748,60 +752,67 @@ class ElectricalMeasurement(BaseElectricalMeasurement):
     cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
     stop_on_match_group=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT,
 )
-class PolledElectricalMeasurement(BaseElectricalMeasurement):
-    """Polled active power measurement."""
+class PolledElectricalMeasurement(ElectricalMeasurementActivePower):
+    """Polled active power measurement that polls all relevant EM attributes."""
 
     _use_custom_polling: bool = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementRMSActivePowerPhB(PolledElectricalMeasurement):
-    """RMS active power phase B measurement."""
+class ElectricalMeasurementActivePowerPhB(ElectricalMeasurementActivePower):
+    """Active power phase B measurement."""
 
     _attribute_name = "active_power_ph_b"
     _unique_id_suffix = "active_power_ph_b"
     _attr_translation_key: str = "active_power_ph_b"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
-    _skip_creation_if_no_attr_cache = True
     _attr_max_attribute_name = "active_power_max_ph_b"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementRMSActivePowerPhC(PolledElectricalMeasurement):
-    """RMS active power phase C measurement."""
+class ElectricalMeasurementActivePowerPhC(ElectricalMeasurementActivePower):
+    """Active power phase C measurement."""
 
     _attribute_name = "active_power_ph_c"
     _unique_id_suffix = "active_power_ph_c"
     _attr_translation_key: str = "active_power_ph_c"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
-    _skip_creation_if_no_attr_cache = True
     _attr_max_attribute_name = "active_power_max_ph_c"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementApparentPower(PolledElectricalMeasurement):
+class ElectricalMeasurementTotalActivePower(ElectricalMeasurementActivePower):
+    """Total active power measurement."""
+
+    _attribute_name = "total_active_power"
+    _unique_id_suffix = "total_active_power"
+    _attr_translation_key: str = "total_active_power"
+    _skip_creation_if_no_attr_cache = True
+
+
+@MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementApparentPower(BaseElectricalMeasurement):
     """Apparent power measurement."""
 
     _attribute_name = "apparent_power"
     _unique_id_suffix = "apparent_power"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
-    _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
     _divisor_attribute_name = "ac_power_divisor"
     _multiplier_attribute_name = "ac_power_multiplier"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.APPARENT_POWER
+    _attr_native_unit_of_measurement = UnitOfApparentPower.VOLT_AMPERE
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementRMSCurrent(PolledElectricalMeasurement):
+class ElectricalMeasurementRMSCurrent(BaseElectricalMeasurement):
     """RMS current measurement."""
 
     _attribute_name = "rms_current"
     _unique_id_suffix = "rms_current"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
-    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
+    _attr_max_attribute_name = "rms_current_max"
     _divisor_attribute_name = "ac_current_divisor"
     _multiplier_attribute_name = "ac_current_multiplier"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.CURRENT
+    _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -811,8 +822,8 @@ class ElectricalMeasurementRMSCurrentPhB(ElectricalMeasurementRMSCurrent):
     _attribute_name = "rms_current_ph_b"
     _unique_id_suffix = "rms_current_ph_b"
     _attr_translation_key: str = "rms_current_ph_b"
-    _skip_creation_if_no_attr_cache = True
     _attr_max_attribute_name: str = "rms_current_max_ph_b"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -822,21 +833,21 @@ class ElectricalMeasurementRMSCurrentPhC(ElectricalMeasurementRMSCurrent):
     _attribute_name: str = "rms_current_ph_c"
     _unique_id_suffix: str = "rms_current_ph_c"
     _attr_translation_key: str = "rms_current_ph_c"
-    _skip_creation_if_no_attr_cache = True
     _attr_max_attribute_name: str = "rms_current_max_ph_c"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementRMSVoltage(PolledElectricalMeasurement):
+class ElectricalMeasurementRMSVoltage(BaseElectricalMeasurement):
     """RMS Voltage measurement."""
 
     _attribute_name = "rms_voltage"
     _unique_id_suffix = "rms_voltage"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
-    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
+    _attr_max_attribute_name = "rms_voltage_max"
     _divisor_attribute_name = "ac_voltage_divisor"
     _multiplier_attribute_name = "ac_voltage_multiplier"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.VOLTAGE
+    _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -846,8 +857,8 @@ class ElectricalMeasurementRMSVoltagePhB(ElectricalMeasurementRMSVoltage):
     _attribute_name = "rms_voltage_ph_b"
     _unique_id_suffix = "rms_voltage_ph_b"
     _attr_translation_key: str = "rms_voltage_ph_b"
-    _skip_creation_if_no_attr_cache = True
     _attr_max_attribute_name = "rms_voltage_max_ph_b"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -857,35 +868,32 @@ class ElectricalMeasurementRMSVoltagePhC(ElectricalMeasurementRMSVoltage):
     _attribute_name = "rms_voltage_ph_c"
     _unique_id_suffix = "rms_voltage_ph_c"
     _attr_translation_key: str = "rms_voltage_ph_c"
-    _skip_creation_if_no_attr_cache = True
     _attr_max_attribute_name = "rms_voltage_max_ph_c"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementFrequency(PolledElectricalMeasurement):
+class ElectricalMeasurementFrequency(BaseElectricalMeasurement):
     """Frequency measurement."""
 
     _attribute_name = "ac_frequency"
     _unique_id_suffix = "ac_frequency"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
-    _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
     _attr_translation_key: str = "ac_frequency"
-    _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
+    _attr_max_attribute_name = "ac_frequency_max"
     _divisor_attribute_name = "ac_frequency_divisor"
     _multiplier_attribute_name = "ac_frequency_multiplier"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _attr_native_unit_of_measurement = UnitOfFrequency.HERTZ
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
-class ElectricalMeasurementPowerFactor(PolledElectricalMeasurement):
+class ElectricalMeasurementPowerFactor(BaseElectricalMeasurement):
     """Power Factor measurement."""
 
     _attribute_name = "power_factor"
     _unique_id_suffix = "power_factor"
-    _use_custom_polling = False  # Poll indirectly by ElectricalMeasurementSensor
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
     _attr_native_unit_of_measurement = PERCENTAGE
-    _divisor_attribute_name = None
-    _multiplier_attribute_name = None
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -896,7 +904,6 @@ class ElectricalMeasurementPowerFactorPhB(ElectricalMeasurementPowerFactor):
     _unique_id_suffix = "power_factor_ph_b"
     _attr_translation_key: str = "power_factor_ph_b"
     _skip_creation_if_no_attr_cache = True
-    _attr_max_attribute_name = "power_factor_max_ph_b"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -907,7 +914,6 @@ class ElectricalMeasurementPowerFactorPhC(ElectricalMeasurementPowerFactor):
     _unique_id_suffix = "power_factor_ph_c"
     _attr_translation_key: str = "power_factor_ph_c"
     _skip_creation_if_no_attr_cache = True
-    _attr_max_attribute_name = "power_factor_max_ph_c"
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)

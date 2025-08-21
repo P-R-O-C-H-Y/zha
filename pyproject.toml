@@ -14,13 +14,13 @@ readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.12"
 dependencies = [
-    "zigpy==0.80.1",
-    "bellows==0.45.0",
-    "zigpy-znp==0.14.0",
-    "zigpy-deconz==0.25.0",
+    "zigpy==0.82.3",
+    "bellows==0.45.4",
+    "zigpy-znp==0.14.1",
+    "zigpy-deconz==0.25.1",
     "zigpy-xbee==0.21.0",
-    "zigpy-zigate==0.13.2",
-    "zha-quirks==0.0.138",
+    "zigpy-zigate==0.13.3",
+    "zha-quirks==0.0.144",
     "pyserial==3.5",
     "pyserial-asyncio-fast",
 ]
@@ -66,17 +66,23 @@ non_interactive = true
 
 disable_error_code = [
     "no-untyped-def",
-    "attr-defined",
     "no-any-return",
     "no-untyped-call",
-    "assignment",
     "arg-type",
-    "union-attr",
 ]
 
 [[tool.mypy.overrides]]
 module = [
   "tests.*",
+]
+disable_error_code = [
+    "assignment",
+    "no-untyped-def",
+    "attr-defined",
+    "no-any-return",
+    "no-untyped-call",
+    "arg-type",
+    "union-attr",
 ]
 warn_unreachable = false
 
@@ -137,7 +143,6 @@ select = [
     "S317", # suspicious-xml-sax-usage
     "S318", # suspicious-xml-mini-dom-usage
     "S319", # suspicious-xml-pull-dom-usage
-    "S320", # suspicious-xmle-tree-usage
     "S601", # paramiko-call
     "S602", # subprocess-popen-with-shell-equals-true
     "S604", # call-with-shell-equals-true

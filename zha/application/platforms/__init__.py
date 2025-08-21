@@ -10,7 +10,7 @@ import dataclasses
 from enum import StrEnum
 from functools import cached_property
 import logging
-from typing import TYPE_CHECKING, Any, Final, Optional, final
+from typing import TYPE_CHECKING, Any, Final, final
 
 from zigpy.quirks.v2 import EntityMetadata, EntityType
 from zigpy.types.named import EUI64
@@ -104,9 +104,9 @@ class EntityStateChangedEvent:
     event: Final[str] = STATE_CHANGED
     platform: str
     unique_id: str
-    device_ieee: Optional[EUI64] = None
-    endpoint_id: Optional[int] = None
-    group_id: Optional[int] = None
+    device_ieee: EUI64 | None = None
+    endpoint_id: int | None = None
+    group_id: int | None = None
 
 
 class BaseEntity(LogMixin, EventBase):
@@ -123,7 +123,7 @@ class BaseEntity(LogMixin, EventBase):
     _attr_state_class: str | None = None
     _attr_enabled: bool = True
     _attr_always_supported: bool = False
-    _attr_primary: bool = False
+    _attr_primary: bool | None = None
 
     # When two entities both want to be primary, the one with the higher weight will be
     # chosen. If there is a tie, both lose.
@@ -173,10 +173,13 @@ class BaseEntity(LogMixin, EventBase):
     @property
     def primary(self) -> bool:
         """Return if the entity is the primary device control."""
+        if self._attr_primary is None:
+            return False
+
         return self._attr_primary
 
     @primary.setter
-    def primary(self, value: bool) -> None:
+    def primary(self, value: bool | None) -> None:
         """Set the entity as the primary device control."""
         self._attr_primary = value
 
@@ -348,8 +351,9 @@ class PlatformEntity(BaseEntity):
         cluster_handlers: list[ClusterHandler],
         endpoint: Endpoint,
         device: Device,
+        *,
         entity_metadata: EntityMetadata | None = None,
-        legacy_discovery_unique_id: str | None = None,
+        legacy_discovery_unique_id: str,
         **kwargs: Any,
     ):
         """Initialize the platform entity."""
@@ -403,6 +407,9 @@ class PlatformEntity(BaseEntity):
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
         else:
             self._attr_entity_category = None
+
+        if entity_metadata.primary is not None:
+            self._attr_primary = entity_metadata.primary
 
     @cached_property
     def identifiers(self) -> PlatformEntityIdentifiers:

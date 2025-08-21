@@ -153,7 +153,6 @@ async def setup_test_data(
     )
 
     zha_device = await join_zigpy_device(zha_gateway, zigpy_device)
-    zha_device.async_update_sw_build_id(installed_fw_version)
 
     return zha_device, ota_cluster, fw_image, installed_fw_version
 
@@ -606,28 +605,3 @@ async def test_firmware_update_latest_version_even_if_downgrade(
         entity.state[ATTR_LATEST_VERSION]
         == f"0x{fw_image_downgrade.firmware.header.file_version:08x}"
     )
-
-
-@pytest.mark.parametrize(
-    "latest_version",
-    [
-        "0x1234",
-        "0x12345678",
-    ],
-)
-async def test_firmware_update_state_restoration(
-    zha_gateway: Gateway, latest_version: str
-) -> None:
-    """Test the firmware update state restoration function."""
-    zigpy_device = zigpy_device_mock(zha_gateway)
-    zha_device, ota_cluster, fw_image, installed_fw_version = await setup_test_data(
-        zha_gateway, zigpy_device
-    )
-
-    entity = get_entity(zha_device, platform=Platform.UPDATE)
-    assert not entity.state[ATTR_LATEST_VERSION]
-
-    entity.restore_external_state_attributes(
-        latest_version=latest_version,
-    )
-    assert entity.state[ATTR_LATEST_VERSION] == latest_version

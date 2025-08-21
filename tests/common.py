@@ -8,8 +8,8 @@ import json
 import logging
 import pathlib
 import time
-from typing import Any, Optional
-from unittest.mock import AsyncMock, Mock
+from typing import Any
+from unittest.mock import AsyncMock
 
 from zigpy.application import ControllerApplication
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -62,7 +62,6 @@ def patch_cluster_for_testing(cluster: zigpy.zcl.Cluster) -> None:
     cluster.configure_reporting_multiple = AsyncMock(
         return_value=zcl_f.ConfigureReportingResponse.deserialize(b"\x00")[0]
     )
-    cluster.handle_cluster_request = Mock()
     cluster.read_attributes = AsyncMock(wraps=cluster.read_attributes)
     cluster.read_attributes_raw = AsyncMock(side_effect=_read_attribute_raw)
     cluster.unbind = AsyncMock(return_value=[0])
@@ -187,7 +186,7 @@ def find_entity(device: Device, platform: Platform) -> PlatformEntity:
 
 
 def mock_coro(
-    return_value: Any = None, exception: Optional[Exception] = None
+    return_value: Any = None, exception: Exception | None = None
 ) -> Awaitable:
     """Return a coro that returns a value or raise an exception."""
     fut: asyncio.Future = asyncio.Future()
@@ -320,7 +319,7 @@ def zigpy_device_from_device_data(
     app: ControllerApplication,
     device_data: dict,
     patch_cluster: bool = True,
-    quirk: Optional[Callable] = None,
+    quirk: Callable | None = None,
 ) -> zigpy.device.Device:
     """Make a fake device using the specified cluster classes."""
 
@@ -350,10 +349,10 @@ def zigpy_device_from_device_data(
                 endpoint.profile_id = profile_id
                 endpoint.device_type = device_type
 
-            for cluster_id in ep["input_clusters"]:
+            for cluster_id in ep.get("input_clusters", []):
                 endpoint.add_input_cluster(int(cluster_id, 16))
 
-            for cluster_id in ep["output_clusters"]:
+            for cluster_id in ep.get("output_clusters", []):
                 endpoint.add_output_cluster(int(cluster_id, 16))
     else:
         for epid, ep in device_data["endpoints"].items():
@@ -397,11 +396,11 @@ def zigpy_device_from_device_data(
                 for attr in cluster["attributes"]:
                     attrid = int(attr["id"], 16)
 
-                    if attr["value"] is not None:
+                    if attr.get("value", None) is not None:
                         real_cluster._attr_cache[attrid] = attr["value"]
                         real_cluster.PLUGGED_ATTR_READS[attrid] = attr["value"]
 
-                    if attr["unsupported"]:
+                    if attr.get("unsupported", False):
                         real_cluster.unsupported_attributes.add(attrid)
 
                         if attr["name"] is not None:
@@ -443,7 +442,7 @@ async def zigpy_device_from_json(
     app: ControllerApplication,
     json_file: str,
     patch_cluster: bool = True,
-    quirk: Optional[Callable] = None,
+    quirk: Callable | None = None,
 ) -> zigpy.device.Device:
     """Make a fake device using the specified cluster classes."""
     device_data = await asyncio.get_running_loop().run_in_executor(
@@ -481,7 +480,7 @@ def create_mock_zigpy_device(
     node_descriptor: zdo_t.NodeDescriptor | None = None,
     nwk: int = 0xB79C,
     patch_cluster: bool = True,
-    quirk: Optional[Callable] = None,
+    quirk: Callable | None = None,
     attributes: dict[int, dict[str, dict[str, Any]]] = None,
 ) -> zigpy.device.Device:
     """Make a fake device using the specified cluster classes."""

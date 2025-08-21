@@ -30,6 +30,7 @@ from zha.zigbee.cluster_handlers.const import (
     ATTRIBUTE_VALUE,
     IKEA_AIR_PURIFIER_CLUSTER,
     IKEA_REMOTE_CLUSTER,
+    IKEA_SHORTCUT_V1_CLUSTER,
     INOVELLI_CLUSTER,
     LEGRAND_CABLE_OUTLET_CLUSTER,
     OSRAM_BUTTON_CLUSTER,
@@ -271,7 +272,46 @@ class InovelliConfigEntityClusterHandler(ClusterHandler):
     def __init__(self, cluster: zigpy.zcl.Cluster, endpoint: Endpoint) -> None:
         """Initialize Inovelli cluster handler."""
         super().__init__(cluster, endpoint)
-        if self.cluster.endpoint.model == "VZM31-SN":
+        if self.cluster.endpoint.model == "VZM30-SN":
+            self.ZCL_INIT_ATTRS = {
+                "dimming_speed_up_remote": True,
+                "dimming_speed_up_local": True,
+                "ramp_rate_off_to_on_remote": True,
+                "ramp_rate_off_to_on_local": True,
+                "dimming_speed_down_remote": True,
+                "dimming_speed_down_local": True,
+                "ramp_rate_on_to_off_remote": True,
+                "ramp_rate_on_to_off_local": True,
+                "minimum_level": True,
+                "maximum_level": True,
+                "invert_switch": True,
+                "auto_off_timer": True,
+                "default_level_local": True,
+                "default_level_remote": True,
+                "state_after_power_restored": True,
+                "load_level_indicator_timeout": True,
+                "active_power_reports": True,
+                "periodic_power_and_energy_reports": True,
+                "active_energy_reports": True,
+                "power_type": False,
+                "switch_type": False,
+                "internal_temp_monitor": True,
+                "overheated": True,
+                "button_delay": False,
+                "smart_bulb_mode": False,
+                "led_color_when_on": True,
+                "led_color_when_off": True,
+                "led_intensity_when_on": True,
+                "led_intensity_when_off": True,
+                "led_scaling_mode": True,
+                "aux_switch_scenes": True,
+                "binding_off_to_on_sync_level": True,
+                "local_protection": False,
+                "output_mode": False,
+                "firmware_progress_led": True,
+                "disable_clear_notifications_double_tap": True,
+            }
+        elif self.cluster.endpoint.model == "VZM31-SN":
             self.ZCL_INIT_ATTRS = {
                 "dimming_speed_up_remote": True,
                 "dimming_speed_up_local": True,
@@ -436,11 +476,31 @@ class IkeaAirPurifierClusterHandler(ClusterHandler):
 
 
 @registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(IKEA_REMOTE_CLUSTER)
-@registries.CLUSTER_HANDLER_REGISTRY.register(IKEA_REMOTE_CLUSTER)
-class IkeaRemoteClusterHandler(ClusterHandler):
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(IKEA_REMOTE_CLUSTER)
+class IkeaRemoteClientClusterHandler(ClientClusterHandler):
     """Ikea Matter remote cluster handler."""
 
     REPORT_CONFIG = ()
+
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+        # Do not emit ZHA events when receiving a client command, this duplicates the
+        # existing event sent by the quirk.
+        pass
+
+
+@registries.CLUSTER_HANDLER_ONLY_CLUSTERS.register(IKEA_SHORTCUT_V1_CLUSTER)
+@registries.CLIENT_CLUSTER_HANDLER_REGISTRY.register(IKEA_SHORTCUT_V1_CLUSTER)
+class IkeaSymfoniskRemoteClientClusterHandler(ClientClusterHandler):
+    """Ikea Symfonisk remote cluster handler."""
+
+    REPORT_CONFIG = ()
+
+    def cluster_command(self, tsn, command_id, args):
+        """Handle a cluster command received on this cluster."""
+        # Do not emit ZHA events when receiving a client command, this duplicates the
+        # existing event sent by the quirk.
+        pass
 
 
 @registries.CLUSTER_HANDLER_REGISTRY.register(
@@ -468,7 +528,7 @@ class SonoffPresenceSenorClusterHandler(ClusterHandler):
 class DanfossThermostatClusterHandler(ThermostatClusterHandler):
     """Thermostat cluster handler for the Danfoss TRV and derivatives."""
 
-    REPORT_CONFIG = (
+    REPORT_CONFIG = (  # type: ignore[assignment]
         *ThermostatClusterHandler.REPORT_CONFIG,
         AttrReportConfig(attr="open_window_detection", config=REPORT_CONFIG_DEFAULT),
         AttrReportConfig(attr="heat_required", config=REPORT_CONFIG_ASAP),

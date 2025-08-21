@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from functools import partial
 import math
-from typing import Any, Optional
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -337,6 +337,8 @@ async def async_test_em_power_factor(
     zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
 ):
     """Test electrical measurement Power Factor sensor."""
+    assert entity.extra_state_attribute_names == {"measurement_type"}
+
     # update divisor cached value
     await send_attributes_report(zha_gateway, cluster, {"ac_power_divisor": 1})
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0510: 100, 10: 1000})
@@ -381,6 +383,7 @@ async def async_test_em_rms_voltage(
     zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
 ) -> None:
     """Test electrical measurement RMS Voltage sensor."""
+    assert entity.extra_state_attribute_names == {"measurement_type", "rms_voltage_max"}
 
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0505: 1234})
     assert_state(entity, 123.4, "V")
@@ -748,8 +751,8 @@ async def test_sensor(
     cluster_id: int,
     entity_type: type[PlatformEntity],
     test_func: Callable[[Cluster, Cluster, PlatformEntity], Awaitable[None]],
-    read_plug: Optional[dict],
-    unsupported_attrs: Optional[set],
+    read_plug: dict | None,
+    unsupported_attrs: set | None,
 ) -> None:
     """Test zha sensor platform."""
 
@@ -1427,6 +1430,7 @@ async def test_elec_measurement_skip_unsupported_attribute(
         "active_power_max",
         "active_power_max_ph_b",
         "active_power_max_ph_c",
+        "total_active_power",
         "apparent_power",
         "rms_current",
         "rms_current_ph_b",

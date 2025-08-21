@@ -7,7 +7,7 @@ from enum import IntFlag, StrEnum
 import functools
 import itertools
 import logging
-from typing import TYPE_CHECKING, Any, Final, final
+from typing import TYPE_CHECKING, Any, Final
 
 from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 from zigpy.zcl.clusters.general import Ota, QueryNextImageCommand
@@ -52,7 +52,6 @@ class UpdateEntityFeature(IntFlag):
     RELEASE_NOTES = 16
 
 
-ATTR_BACKUP: Final = "backup"
 ATTR_INSTALLED_VERSION: Final = "installed_version"
 ATTR_IN_PROGRESS: Final = "in_progress"
 ATTR_UPDATE_PERCENTAGE: Final = "update_percentage"
@@ -69,7 +68,6 @@ class UpdateEntityInfo(BaseEntityInfo):
 
     supported_features: UpdateEntityFeature
     device_class: UpdateDeviceClass
-    entity_category: EntityCategory
 
 
 class BaseFirmwareUpdateEntity(PlatformEntity):
@@ -77,7 +75,6 @@ class BaseFirmwareUpdateEntity(PlatformEntity):
 
     PLATFORM = Platform.UPDATE
 
-    _unique_id_suffix = "firmware_update"
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
@@ -105,7 +102,16 @@ class BaseFirmwareUpdateEntity(PlatformEntity):
     def state(self):
         """Get the state for the entity."""
         response = super().state
-        response.update(self.state_attributes)
+        if (release_summary := self.release_summary) is not None:
+            release_summary = release_summary[:255]
+
+        response[ATTR_INSTALLED_VERSION] = self.installed_version
+        response[ATTR_IN_PROGRESS] = self.in_progress
+        response[ATTR_UPDATE_PERCENTAGE] = self.update_percentage
+        response[ATTR_LATEST_VERSION] = self.latest_version
+        response[ATTR_RELEASE_SUMMARY] = release_summary
+        response[ATTR_RELEASE_NOTES] = self.release_notes
+        response[ATTR_RELEASE_URL] = self.release_url
         return response
 
     @property
@@ -160,31 +166,6 @@ class BaseFirmwareUpdateEntity(PlatformEntity):
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
-
-    @final
-    @property
-    def state_attributes(self) -> dict[str, Any] | None:
-        """Return state attributes."""
-        if (release_summary := self.release_summary) is not None:
-            release_summary = release_summary[:255]
-
-        return {
-            ATTR_INSTALLED_VERSION: self.installed_version,
-            ATTR_IN_PROGRESS: self.in_progress,
-            ATTR_UPDATE_PERCENTAGE: self.update_percentage,
-            ATTR_LATEST_VERSION: self.latest_version,
-            ATTR_RELEASE_SUMMARY: release_summary,
-            ATTR_RELEASE_NOTES: self.release_notes,
-            ATTR_RELEASE_URL: self.release_url,
-        }
-
-    def _get_cluster_version(self) -> str | None:
-        """Synchronize current file version with the cluster."""
-
-        if self._ota_cluster_handler.current_file_version is not None:
-            return f"0x{self._ota_cluster_handler.current_file_version:08x}"
-
-        return None
 
     def handle_cluster_handler_attribute_updated(
         self,
@@ -243,13 +224,13 @@ class BaseFirmwareUpdateEntity(PlatformEntity):
 
             firmware = self._compatible_images.upgrades[0]
         else:
-            version = int(version, 16)
+            version_int = int(version, 16)
 
             for firmware in itertools.chain(
                 self._compatible_images.upgrades,
                 self._compatible_images.downgrades,
             ):
-                if firmware.version == version:
+                if firmware.version == version_int:
                     break
             else:
                 raise ZHAException(f"Version {version!r} is not available")
@@ -278,35 +259,17 @@ class BaseFirmwareUpdateEntity(PlatformEntity):
         self._attr_in_progress = False
         self.maybe_emit_state_changed_event()
 
-    def on_add(self) -> None:
-        """Call when entity is added."""
-        super().on_add()
-
-        self.device.device.add_listener(self)
-        self._on_remove_callbacks.append(
-            self._ota_cluster_handler.on_event(
-                CLUSTER_HANDLER_ATTRIBUTE_UPDATED,
-                self.handle_cluster_handler_attribute_updated,
-            )
-        )
-        self._on_remove_callbacks.append(
-            lambda: self.device.device.remove_listener(self)
-        )
-
     async def on_remove(self) -> None:
         """Call when entity will be removed."""
         self._attr_in_progress = False
         await super().on_remove()
 
-    def restore_external_state_attributes(self, *, latest_version: str | None) -> None:
-        """Restore extra state attributes that are stored outside of the ZCL cache."""
-        if latest_version is not None:
-            self._attr_latest_version = latest_version
-
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_OTA)
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Representation of a ZHA firmware update entity."""
+
+    _unique_id_suffix = "firmware_update"
 
     def __init__(
         self,
@@ -326,10 +289,34 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             upgrades=(), downgrades=()
         )
 
+    def on_add(self) -> None:
+        """Call when entity is added."""
+        super().on_add()
+
+        self.device.device.add_listener(self)
+        self._on_remove_callbacks.append(
+            self._ota_cluster_handler.on_event(
+                CLUSTER_HANDLER_ATTRIBUTE_UPDATED,
+                self.handle_cluster_handler_attribute_updated,
+            )
+        )
+        self._on_remove_callbacks.append(
+            lambda: self.device.device.remove_listener(self)
+        )
+
+    def _get_cluster_version(self) -> str | None:
+        """Synchronize current file version with the cluster."""
+        if self._ota_cluster_handler.current_file_version is not None:
+            return f"0x{self._ota_cluster_handler.current_file_version:08x}"
+
+        return None
+
 
 @CONFIG_DIAGNOSTIC_MATCH(cluster_handler_names=CLUSTER_HANDLER_OTA_SERVER)
 class FirmwareUpdateServerEntity(BaseFirmwareUpdateEntity):
     """Representation of a ZHA firmware update entity."""
+
+    _unique_id_suffix = "firmware_update"
 
     def __init__(
         self,
@@ -349,3 +336,25 @@ class FirmwareUpdateServerEntity(BaseFirmwareUpdateEntity):
         self._compatible_images: OtaImagesResult = OtaImagesResult(
             upgrades=(), downgrades=()
         )
+
+    def on_add(self) -> None:
+        """Call when entity is added."""
+        super().on_add()
+
+        self.device.device.add_listener(self)
+        self._on_remove_callbacks.append(
+            self._ota_cluster_handler.on_event(
+                CLUSTER_HANDLER_ATTRIBUTE_UPDATED,
+                self.handle_cluster_handler_attribute_updated,
+            )
+        )
+        self._on_remove_callbacks.append(
+            lambda: self.device.device.remove_listener(self)
+        )
+
+    def _get_cluster_version(self) -> str | None:
+        """Synchronize current file version with the cluster."""
+        if self._ota_cluster_handler.current_file_version is not None:
+            return f"0x{self._ota_cluster_handler.current_file_version:08x}"
+
+        return None

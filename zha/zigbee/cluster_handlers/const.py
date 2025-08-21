@@ -40,6 +40,7 @@ CLUSTER_READS_PER_REQ: Final[int] = 5
 
 CLUSTER_HANDLER_ACCELEROMETER: Final[str] = "accelerometer"
 CLUSTER_HANDLER_BINARY_INPUT: Final[str] = "binary_input"
+CLUSTER_HANDLER_BINARY_OUTPUT: Final[str] = "binary_output"
 CLUSTER_HANDLER_ANALOG_INPUT: Final[str] = "analog_input"
 CLUSTER_HANDLER_ANALOG_OUTPUT: Final[str] = "analog_output"
 CLUSTER_HANDLER_ATTRIBUTE: Final[str] = "attribute"
@@ -83,6 +84,7 @@ CLUSTER_HANDLER_INOVELLI = "inovelli_vzm31sn_cluster"
 AQARA_OPPLE_CLUSTER: Final[int] = 0xFCC0
 IKEA_AIR_PURIFIER_CLUSTER: Final[int] = 0xFC7D
 IKEA_REMOTE_CLUSTER: Final[int] = 0xFC80
+IKEA_SHORTCUT_V1_CLUSTER: Final[int] = 0xFC7F
 INOVELLI_CLUSTER: Final[int] = 0xFC31
 OSRAM_BUTTON_CLUSTER: Final[int] = 0xFD00
 PHILIPS_CONTACT_CLUSTER: Final[int] = 0xFC06

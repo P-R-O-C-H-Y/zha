@@ -1,6 +1,7 @@
 """Test ZHA device switch."""
 
 import asyncio
+from datetime import UTC, datetime
 import logging
 import time
 from unittest import mock
@@ -11,8 +12,12 @@ from zigpy.exceptions import ZigbeeException
 import zigpy.profiles.zha
 from zigpy.quirks.registry import DeviceRegistry
 from zigpy.quirks.v2 import DeviceAlertLevel, DeviceAlertMetadata, QuirkBuilder
+from zigpy.quirks.v2.homeassistant import EntityType
+from zigpy.quirks.v2.homeassistant.sensor import SensorDeviceClass, SensorStateClass
 import zigpy.types
+from zigpy.zcl import ClusterType
 from zigpy.zcl.clusters import general
+from zigpy.zcl.clusters.general import Ota, PowerConfiguration
 from zigpy.zcl.foundation import Status, WriteAttributesResponse
 import zigpy.zdo.types as zdo_t
 
@@ -42,7 +47,12 @@ from zha.application.platforms.light import Light
 from zha.application.platforms.sensor import LQISensor, RSSISensor
 from zha.application.platforms.switch import Switch
 from zha.exceptions import ZHAException
-from zha.zigbee.device import ClusterBinding, get_device_automation_triggers
+from zha.zigbee.device import (
+    ClusterBinding,
+    DeviceFirmwareInfoUpdatedEvent,
+    ZHAEvent,
+    get_device_automation_triggers,
+)
 from zha.zigbee.group import Group
 
 
@@ -741,7 +751,7 @@ async def test_device_properties(
 
     assert zha_device.power_configuration_ch is None
     assert zha_device.basic_ch is not None
-    assert zha_device.sw_version is None
+    assert zha_device.firmware_version is None
 
     assert len(zha_device.platform_entities) == 3
 
@@ -778,6 +788,50 @@ async def test_device_properties(
     assert zha_device.is_router is None
     assert zha_device.is_end_device is None
     assert zha_device.is_coordinator is None
+
+
+async def test_device_firmware_version_syncing(zha_gateway: Gateway) -> None:
+    """Test device firmware version syncing."""
+    zigpy_dev = await zigpy_device_from_json(
+        zha_gateway.application_controller,
+        "tests/data/devices/philips-sml001.json",
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+
+    # Register a callback to listen for device updates
+    update_callback = mock.Mock()
+    zha_device.on_event(DeviceFirmwareInfoUpdatedEvent.event_type, update_callback)
+
+    # The firmware version is restored on device initialization
+    assert zha_device.firmware_version == "0x42006bb7"
+
+    # If we update the entity, the device updates as well
+    update_entity = get_entity(zha_device, platform=Platform.UPDATE)
+    update_entity._ota_cluster_handler.attribute_updated(
+        attrid=Ota.AttributeDefs.current_file_version.id,
+        value=zigpy.types.uint32_t(0xABCD1234),
+        timestamp=datetime.now(UTC),
+    )
+
+    assert zha_device.firmware_version == "0xabcd1234"
+
+    # Duplicate updates are ignored
+    update_entity._ota_cluster_handler.attribute_updated(
+        attrid=Ota.AttributeDefs.current_file_version.id,
+        value=zigpy.types.uint32_t(0xABCD1234),
+        timestamp=datetime.now(UTC),
+    )
+
+    assert zha_device.firmware_version == "0xabcd1234"
+    assert update_callback.mock_calls == [
+        call(
+            DeviceFirmwareInfoUpdatedEvent(
+                old_firmware_version="0x42006bb7",
+                new_firmware_version="0xabcd1234",
+            )
+        )
+    ]
 
 
 async def test_quirks_v2_device_renaming(zha_gateway: Gateway) -> None:
@@ -895,6 +949,35 @@ async def test_primary_entity_computation(
         ]
 
 
+async def test_quirks_v2_primary_entity(zha_gateway: Gateway) -> None:
+    """Test quirks v2 primary entity."""
+    registry = DeviceRegistry()
+
+    (
+        QuirkBuilder("CentraLite", "3405-L", registry=registry)
+        .sensor(
+            attribute_name=PowerConfiguration.AttributeDefs.battery_quantity.id,
+            cluster_id=PowerConfiguration.cluster_id,
+            translation_key="battery_quantity",
+            fallback_name="Battery quantity",
+            primary=True,
+        )
+        .add_to_registry()
+    )
+
+    zigpy_dev = registry.get_device(
+        await zigpy_device_from_json(
+            zha_gateway.application_controller,
+            "tests/data/devices/centralite-3405-l.json",
+        )
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+
+    (primary,) = [e for e in zha_device.platform_entities.values() if e.primary]
+    assert primary.translation_key == "battery_quantity"
+
+
 async def test_quirks_v2_prevent_default_entities(zha_gateway: Gateway) -> None:
     """Test quirks v2 can prevent creating default entities."""
     registry = DeviceRegistry()
@@ -926,6 +1009,69 @@ async def test_quirks_v2_prevent_default_entities(zha_gateway: Gateway) -> None:
         )
 
     assert len(zha_device.platform_entities) == 8
+
+
+async def test_quirks_v2_change_entity_metadata(zha_gateway: Gateway) -> None:
+    """Test quirks v2 can change entity metadata."""
+    registry = DeviceRegistry()
+
+    def filter_func(entity) -> bool:
+        return entity.__class__.__name__ == "LQISensor"
+
+    (
+        QuirkBuilder("CentraLite", "3405-L", registry=registry)
+        .change_entity_metadata(
+            endpoint_id=1,
+            unique_id_suffix="-lqi",
+            new_device_class=SensorDeviceClass.POWER,
+            new_state_class=SensorStateClass.MEASUREMENT,
+            new_entity_category=EntityType.CONFIG,
+            new_entity_registry_enabled_default=False,
+            new_translation_key="custom_lqi_key",
+            new_fallback_name="Custom LQI Name",
+        )
+        .change_entity_metadata(
+            function=filter_func,
+            new_unique_id="custom_lqi_unique_id",
+        )
+        .change_entity_metadata(
+            endpoint_id=1,
+            cluster_id=general.Identify.cluster_id,
+            cluster_type=ClusterType.Server,
+            new_primary=True,
+        )
+        .add_to_registry()
+    )
+
+    zigpy_dev = registry.get_device(
+        await zigpy_device_from_json(
+            zha_gateway.application_controller,
+            "tests/data/devices/centralite-3405-l.json",
+        )
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+
+    # Find the LQI sensor entity to verify metadata changes were applied
+    lqi_entity = get_entity(
+        zha_device, platform=Platform.SENSOR, qualifier="custom_lqi_unique_id"
+    )
+
+    assert lqi_entity is not None, "LQI sensor entity should exist"
+
+    # Verify metadata changes were applied - first filter matches by endpoint_id=1 and unique_id_suffix="-lqi"
+    assert lqi_entity._attr_device_class == SensorDeviceClass.POWER
+    assert lqi_entity._attr_state_class == SensorStateClass.MEASUREMENT
+    assert lqi_entity._attr_entity_category == EntityType.CONFIG
+    assert lqi_entity._attr_entity_registry_enabled_default is False
+    assert lqi_entity._attr_translation_key == "custom_lqi_key"
+    assert lqi_entity._attr_fallback_name == "Custom LQI Name"
+
+    # Verify metadata changes from second filter - function-based match
+    assert lqi_entity.unique_id == "custom_lqi_unique_id"
+
+    button_entity = get_entity(zha_device, platform=Platform.BUTTON)
+    assert button_entity._attr_primary is True
 
 
 async def test_join_binding_reporting(zha_gateway: Gateway) -> None:
@@ -963,3 +1109,95 @@ async def test_endpoint_none_profile(
 
     assert zha_device.async_get_std_clusters() == {}
     assert "Skipping endpoint, profile is None" in caplog.text
+
+
+async def test_somrig_events(zha_gateway: Gateway) -> None:
+    """Test that Somrig events are handled correctly."""
+
+    zigpy_dev = await zigpy_device_from_json(
+        zha_gateway.application_controller,
+        "tests/data/devices/ikea-of-sweden-somrig-shortcut-button.json",
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+
+    listener = mock.Mock()
+    zha_device.on_all_events(listener)
+
+    # ShortcutV2Cluster:initial_press(new_position=0)
+    zigpy_dev.packet_received(
+        zigpy.types.ZigbeePacket(
+            src_ep=1,
+            dst_ep=1,
+            tsn=0,
+            profile_id=260,
+            cluster_id=64640,
+            data=zigpy.types.SerializableBytes(b"\x15|\x11\x0f\x01\x00"),
+        )
+    )
+
+    assert listener.mock_calls == [
+        call(
+            ZHAEvent(
+                device_ieee=zigpy.types.EUI64.convert("ab:cd:ef:12:6d:e6:02:47"),
+                unique_id="ab:cd:ef:12:6d:e6:02:47",
+                data={
+                    "unique_id": "ab:cd:ef:12:6d:e6:02:47:1:0xfc80_CLIENT",
+                    "endpoint_id": 1,
+                    "cluster_id": 64640,
+                    "command": "initial_press",
+                    "args": [0],
+                    "params": {"new_position": 0},
+                },
+                event_type="zha_event",
+                event="zha_event",
+            )
+        )
+    ]
+
+
+async def test_symfonisk_events(
+    zha_gateway: Gateway,
+) -> None:
+    """Test that Symfonisk events are handled correctly."""
+
+    zigpy_dev = await zigpy_device_from_json(
+        zha_gateway.application_controller,
+        "tests/data/devices/ikea-of-sweden-symfonisk-sound-remote-gen2.json",
+    )
+
+    zha_device = await join_zigpy_device(zha_gateway, zigpy_dev)
+
+    listener = mock.Mock()
+    zha_device.on_all_events(listener)
+
+    # ShortcutV1Cluster:shortcut_v1_events(shortcut_button=1, shortcut_event=1)
+    zigpy_dev.packet_received(
+        zigpy.types.ZigbeePacket(
+            src_ep=1,
+            dst_ep=1,
+            tsn=0,
+            profile_id=260,
+            cluster_id=64639,
+            data=zigpy.types.SerializableBytes(b"\x15|\x11\x1f\x01\x01\x01"),
+        )
+    )
+
+    assert listener.mock_calls == [
+        call(
+            ZHAEvent(
+                device_ieee=zigpy.types.EUI64.convert("ab:cd:ef:12:52:61:2b:43"),
+                unique_id="ab:cd:ef:12:52:61:2b:43",
+                data={
+                    "unique_id": "ab:cd:ef:12:52:61:2b:43:1:0xfc7f_CLIENT",
+                    "endpoint_id": 1,
+                    "cluster_id": 64639,
+                    "command": "shortcut_v1_events",
+                    "args": [1, 1],
+                    "params": {"shortcut_button": 1, "shortcut_event": 1},
+                },
+                event_type="zha_event",
+                event="zha_event",
+            )
+        )
+    ]

@@ -187,7 +187,7 @@ class FakeManufacturerCluster(CustomCluster, ManufacturerSpecificCluster):
         """Server command definitions."""
 
         self_test: Final = zcl_f.ZCLCommandDef(
-            id=0x00, schema={"identify_time": t.uint16_t}, direction=False
+            id=0x00, schema={"identify_time": t.uint16_t}
         )
 
 

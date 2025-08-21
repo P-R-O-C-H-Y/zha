@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, cast
 from zhaquirks.quirk_ids import DANFOSS_ALLY_THERMOSTAT, TUYA_PLUG_ONOFF
 from zigpy.quirks.v2 import SwitchMetadata
 from zigpy.zcl.clusters.closures import ConfigStatus, WindowCovering, WindowCoveringMode
-from zigpy.zcl.clusters.general import OnOff
+from zigpy.zcl.clusters.general import BinaryOutput, OnOff
 from zigpy.zcl.foundation import Status
 
 from zha.application import Platform
@@ -27,12 +27,16 @@ from zha.zigbee.cluster_handlers import ClusterAttributeUpdatedEvent
 from zha.zigbee.cluster_handlers.const import (
     CLUSTER_HANDLER_ATTRIBUTE_UPDATED,
     CLUSTER_HANDLER_BASIC,
+    CLUSTER_HANDLER_BINARY_OUTPUT,
     CLUSTER_HANDLER_COVER,
     CLUSTER_HANDLER_INOVELLI,
     CLUSTER_HANDLER_ON_OFF,
     CLUSTER_HANDLER_THERMOSTAT,
 )
-from zha.zigbee.cluster_handlers.general import OnOffClusterHandler
+from zha.zigbee.cluster_handlers.general import (
+    BinaryOutputClusterHandler,
+    OnOffClusterHandler,
+)
 from zha.zigbee.group import Group
 
 if TYPE_CHECKING:
@@ -137,6 +141,71 @@ class Switch(PlatformEntity, BaseSwitch):
     ) -> None:
         """Handle state update from cluster handler."""
         if event.attribute_name == OnOff.AttributeDefs.on_off.name:
+            self.maybe_emit_state_changed_event()
+
+
+@STRICT_MATCH(cluster_handler_names=CLUSTER_HANDLER_BINARY_OUTPUT)
+class BinaryOutputSwitch(PlatformEntity, BaseSwitch):
+    """BinaryOutputCluster switch."""
+
+    def __init__(
+        self,
+        cluster_handlers: list[ClusterHandler],
+        endpoint: Endpoint,
+        device: Device,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(cluster_handlers, endpoint, device, **kwargs)
+        self._binary_output_cluster_handler: BinaryOutputClusterHandler = cast(
+            BinaryOutputClusterHandler,
+            self.cluster_handlers[CLUSTER_HANDLER_BINARY_OUTPUT],
+        )
+
+    def _is_supported(self) -> bool:
+        if self._binary_output_cluster_handler.description is None:
+            return False
+
+        return super()._is_supported()
+
+    def recompute_capabilities(self) -> None:
+        """Recompute capabilities."""
+        super().recompute_capabilities()
+        self._attr_fallback_name = self._binary_output_cluster_handler.description
+
+    def on_add(self) -> None:
+        """Run when entity is added."""
+        super().on_add()
+        self._on_remove_callbacks.append(
+            self._binary_output_cluster_handler.on_event(
+                CLUSTER_HANDLER_ATTRIBUTE_UPDATED,
+                self.handle_cluster_handler_attribute_updated,
+            )
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return if the switch is on."""
+        if self._binary_output_cluster_handler.present_value is None:
+            return False
+        return bool(self._binary_output_cluster_handler.present_value)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:  # pylint: disable=unused-argument
+        """Turn the entity on."""
+        await self._binary_output_cluster_handler.async_set_present_value(True)
+        self.maybe_emit_state_changed_event()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:  # pylint: disable=unused-argument
+        """Turn the entity off."""
+        await self._binary_output_cluster_handler.async_set_present_value(False)
+        self.maybe_emit_state_changed_event()
+
+    def handle_cluster_handler_attribute_updated(
+        self,
+        event: ClusterAttributeUpdatedEvent,  # pylint: disable=unused-argument
+    ) -> None:
+        """Handle state update from cluster handler."""
+        if event.attribute_name == BinaryOutput.AttributeDefs.present_value.name:
             self.maybe_emit_state_changed_event()
 
 
