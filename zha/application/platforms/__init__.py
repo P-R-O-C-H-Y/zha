@@ -56,6 +56,7 @@ class BaseEntityInfo:
     platform: str
     class_name: str
     translation_key: str | None
+    translation_placeholders: dict[str, str] | None
     device_class: str | None
     state_class: str | None
     entity_category: str | None
@@ -117,6 +118,7 @@ class BaseEntity(LogMixin, EventBase):
     _attr_fallback_name: str | None = None
     _attr_icon: str | None = None
     _attr_translation_key: str | None = None
+    _attr_translation_placeholders: dict[str, str] | None = None
     _attr_entity_category: EntityCategory | None = None
     _attr_entity_registry_enabled_default: bool = True
     _attr_device_class: str | None = None
@@ -206,6 +208,11 @@ class BaseEntity(LogMixin, EventBase):
         return None
 
     @property
+    def translation_placeholders(self) -> dict[str, str] | None:
+        """Return the translation placeholders."""
+        return self._attr_translation_placeholders
+
+    @property
     def entity_category(self) -> EntityCategory | None:
         """Return the entity category."""
         if hasattr(self, "_attr_entity_category"):
@@ -258,6 +265,7 @@ class BaseEntity(LogMixin, EventBase):
             class_name=self.__class__.__name__,
             fallback_name=self.fallback_name,
             translation_key=self.translation_key,
+            translation_placeholders=self.translation_placeholders,
             device_class=self.device_class,
             state_class=self.state_class,
             entity_category=self.entity_category,
@@ -393,6 +401,11 @@ class PlatformEntity(BaseEntity):
 
         if entity_metadata.translation_key:
             self._attr_translation_key = entity_metadata.translation_key
+
+        if entity_metadata.translation_placeholders:
+            self._attr_translation_placeholders = (
+                entity_metadata.translation_placeholders
+            )
 
         if unique_id_suffix := entity_metadata.unique_id_suffix:
             self._unique_id_suffix = unique_id_suffix
