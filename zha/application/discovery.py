@@ -232,6 +232,10 @@ class DeviceProbe:
 
             assert cluster_handler
 
+            # flags to determine if we need to claim/bind the cluster handler
+            attribute_initialization_found: bool = False
+            reporting_found: bool = False
+
             for entity_metadata in entity_metadata_list:
                 platform = Platform(entity_metadata.entity_platform.value)
                 metadata_type = type(entity_metadata)
@@ -254,6 +258,7 @@ class DeviceProbe:
 
                 # process the entity metadata for ZCL_INIT_ATTRS and REPORT_CONFIG
                 if attr_name := getattr(entity_metadata, "attribute_name", None):
+                    # TODO: ignore "attribute write buttons"? currently, we claim ch
                     # if the entity has a reporting config, add it to the cluster handler
                     if rep_conf := getattr(entity_metadata, "reporting_config", None):
                         # if attr is already in REPORT_CONFIG, remove it first
@@ -268,8 +273,8 @@ class DeviceProbe:
                         cluster_handler.REPORT_CONFIG += (
                             AttrReportConfig(attr=attr_name, config=astuple(rep_conf)),
                         )
-                        # claim the cluster handler, so ZHA configures and binds it
-                        endpoint.claim_cluster_handlers([cluster_handler])
+                        # mark cluster handler for claiming and binding later
+                        reporting_found = True
 
                     # not in REPORT_CONFIG, add to ZCL_INIT_ATTRS if it not already in
                     elif attr_name not in cluster_handler.ZCL_INIT_ATTRS:
@@ -283,6 +288,8 @@ class DeviceProbe:
                         cluster_handler.ZCL_INIT_ATTRS[attr_name] = (
                             entity_metadata.attribute_initialized_from_cache
                         )
+                        # mark cluster handler for claiming later, but not binding
+                        attribute_initialization_found = True
 
                 yield entity_class(
                     cluster_handlers=[cluster_handler],
@@ -298,6 +305,19 @@ class DeviceProbe:
                     entity_class.__name__,
                     [cluster_handler.name],
                 )
+
+            # if the cluster handler is unclaimed, claim it and set BIND accordingly,
+            # so ZHA configures the cluster handler: reporting + reads attributes
+            if (attribute_initialization_found or reporting_found) and (
+                cluster_handler not in endpoint.claimed_cluster_handlers.values()
+            ):
+                endpoint.claim_cluster_handlers([cluster_handler])
+                # BIND is True by default, so only set to False if no reporting found.
+                # We can safely do this, since quirks v2 entities are initialized last,
+                # so if the cluster handler wasn't claimed by EndpointProbe so far,
+                # only v2 entities need it.
+                if not reporting_found:
+                    cluster_handler.BIND = False
 
     @ignore_exceptions_during_iteration
     def discover_coordinator_device_entities(

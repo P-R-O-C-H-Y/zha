@@ -426,7 +426,7 @@
               },
               "id": "1:0xff03",
               "unique_id": "28:2c:02:bf:ff:eb:4f:2f:1:0xff03",
-              "status": "CREATED",
+              "status": "INITIALIZED",
               "value_attribute": null
             }
           ],
