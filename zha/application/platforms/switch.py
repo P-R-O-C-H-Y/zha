@@ -628,7 +628,7 @@ class AqaraPetFeederChildLock(ConfigurableAttributeSwitch):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, quirk_ids=TUYA_PLUG_ONOFF
+    cluster_handler_names=CLUSTER_HANDLER_ON_OFF, exposed_features=TUYA_PLUG_ONOFF
 )
 class TuyaChildLockSwitch(ConfigurableAttributeSwitch):
     """Representation of a child lock configuration entity."""
@@ -812,7 +812,7 @@ class AqaraE1CurtainMotorHooksLockedSwitch(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossExternalOpenWindowDetected(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute for communicating an open window."""
@@ -824,7 +824,7 @@ class DanfossExternalOpenWindowDetected(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossWindowOpenFeature(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute enabling open window detection."""
@@ -836,7 +836,7 @@ class DanfossWindowOpenFeature(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossMountingModeControl(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute for switching to mounting mode."""
@@ -848,7 +848,7 @@ class DanfossMountingModeControl(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossRadiatorCovered(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute for communicating full usage of the external temperature sensor."""
@@ -860,7 +860,7 @@ class DanfossRadiatorCovered(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossHeatAvailable(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute for communicating available heat."""
@@ -872,7 +872,7 @@ class DanfossHeatAvailable(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossLoadBalancingEnable(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute for enabling load balancing."""
@@ -884,7 +884,7 @@ class DanfossLoadBalancingEnable(ConfigurableAttributeSwitch):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossAdaptationRunSettings(ConfigurableAttributeSwitch):
     """Danfoss proprietary attribute for enabling daily adaptation run.
