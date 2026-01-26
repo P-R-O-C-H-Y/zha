@@ -477,6 +477,7 @@ async def async_test_em_dc_voltage(
     zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
 ) -> None:
     """Test electrical measurement DC Voltage sensor."""
+    assert entity.extra_state_attribute_names == {"measurement_type", "dc_voltage_max"}
 
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0100: 1234})
     assert_state(entity, 123.4, "V")
@@ -727,21 +728,21 @@ async def async_test_em_dc_power(
             homeautomation.ElectricalMeasurement.cluster_id,
             sensor.ElectricalMeasurementDCVoltage,
             async_test_em_dc_voltage,
-            {"dc_voltage_divisor": 10, "dc_voltage_multiplier": 1},
+            {"dc_voltage_divisor": 10, "dc_voltage_multiplier": 1, "dc_voltage": 0},
             {"active_power", "apparent_power", "rms_current", "rms_voltage"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             sensor.ElectricalMeasurementDCCurrent,
             async_test_em_dc_current,
-            {"dc_current_divisor": 1000, "dc_current_multiplier": 1},
+            {"dc_current_divisor": 1000, "dc_current_multiplier": 1, "dc_current": 0},
             {"active_power", "apparent_power", "rms_current", "rms_voltage"},
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             sensor.ElectricalMeasurementDCPower,
             async_test_em_dc_power,
-            {"dc_power_divisor": 1000, "dc_power_multiplier": 1},
+            {"dc_power_divisor": 1000, "dc_power_multiplier": 1, "dc_power": 0},
             {"active_power", "apparent_power", "rms_current", "rms_voltage"},
         ),
     ),
@@ -1457,6 +1458,18 @@ async def test_elec_measurement_skip_unsupported_attribute(
         "ac_current_multiplier",
         "power_divisor",
         "power_multiplier",
+        "dc_voltage",
+        "dc_voltage_max",
+        "dc_voltage_divisor",
+        "dc_voltage_multiplier",
+        "dc_current",
+        "dc_current_max",
+        "dc_current_divisor",
+        "dc_current_multiplier",
+        "dc_power",
+        "dc_power_max",
+        "dc_power_divisor",
+        "dc_power_multiplier",
     }
     for attr in all_attrs - supported_attributes:
         cluster.add_unsupported_attribute(attr)

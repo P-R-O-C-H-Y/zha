@@ -940,6 +940,8 @@ class ElectricalMeasurementDCVoltage(BaseElectricalMeasurement):
     _attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
     _divisor_attribute_name = "dc_voltage_divisor"
     _multiplier_attribute_name = "dc_voltage_multiplier"
+    _attr_max_attribute_name = "dc_voltage_max"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -953,6 +955,8 @@ class ElectricalMeasurementDCCurrent(BaseElectricalMeasurement):
     _attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
     _divisor_attribute_name = "dc_current_divisor"
     _multiplier_attribute_name = "dc_current_multiplier"
+    _attr_max_attribute_name = "dc_current_max"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(cluster_handler_names=CLUSTER_HANDLER_ELECTRICAL_MEASUREMENT)
@@ -966,6 +970,8 @@ class ElectricalMeasurementDCPower(BaseElectricalMeasurement):
     _attr_native_unit_of_measurement = UnitOfPower.WATT
     _divisor_attribute_name = "dc_power_divisor"
     _multiplier_attribute_name = "dc_power_multiplier"
+    _attr_max_attribute_name = "dc_power_max"
+    _skip_creation_if_no_attr_cache = True
 
 
 @MULTI_MATCH(
