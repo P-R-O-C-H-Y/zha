@@ -9,7 +9,7 @@
   "name": "_TZ3290_7v1k4vufotpowp9z TS1201",
   "quirk_applied": true,
   "quirk_class": "zhaquirks.tuya.ts1201.ZosungIRBlaster_ZS06",
-  "quirk_id": null,
+  "exposes_features": [],
   "manufacturer_code": 4098,
   "power_source": "Mains",
   "lqi": null,
@@ -156,6 +156,10 @@
       [
         "_TZ3290_rlkmy85q4pzoxobl",
         "TS1201"
+      ],
+      [
+        "_TZ3290_nba3knpsarkawgnt",
+        "TS1201"
       ]
     ],
     "endpoints": {
@@ -196,6 +200,7 @@
           "platform": "button",
           "class_name": "IdentifyButton",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "identify",
           "state_class": null,
           "entity_category": "diagnostic",
@@ -243,6 +248,7 @@
           "platform": "sensor",
           "class_name": "LQISensor",
           "translation_key": "lqi",
+          "translation_placeholders": null,
           "device_class": null,
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -286,6 +292,7 @@
           "platform": "sensor",
           "class_name": "RSSISensor",
           "translation_key": "rssi",
+          "translation_placeholders": null,
           "device_class": "signal_strength",
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -331,6 +338,7 @@
           "platform": "switch",
           "class_name": "Switch",
           "translation_key": "switch",
+          "translation_placeholders": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -374,6 +382,7 @@
           "platform": "update",
           "class_name": "FirmwareUpdateEntity",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "firmware",
           "state_class": null,
           "entity_category": "config",

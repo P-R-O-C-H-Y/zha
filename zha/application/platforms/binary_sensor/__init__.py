@@ -75,6 +75,7 @@ class BinarySensor(PlatformEntity):
         self._cluster_handler = cluster_handlers[0]
         super().__init__(cluster_handlers, endpoint, device, **kwargs)
         self._state: bool = self.is_on
+        self.recompute_capabilities()
 
     def on_add(self) -> None:
         """Run when entity is added."""
@@ -247,16 +248,10 @@ class IASZone(BinarySensor):
 
     # TODO: split this sensor off into individual sensor classes per IASZone type
 
-    def __init__(
-        self,
-        cluster_handlers: list[ClusterHandler],
-        endpoint: Endpoint,
-        device: Device,
-        **kwargs,
-    ) -> None:
-        """Initialize the ZHA binary sensor."""
-        cluster_handler = cluster_handlers[0]
-        zone_type = cluster_handler.cluster.get("zone_type")
+    def recompute_capabilities(self) -> None:
+        """Recompute capabilities."""
+        super().recompute_capabilities()
+        zone_type = self._cluster_handler.cluster.get("zone_type")
 
         if zone_type is None:
             self._attr_translation_key = "ias_zone"
@@ -267,8 +262,6 @@ class IASZone(BinarySensor):
                 None if zone_type in IAS_ZONE_CLASS_MAPPING else "ias_zone"
             )
             self._attr_device_class = IAS_ZONE_CLASS_MAPPING.get(zone_type)
-
-        super().__init__(cluster_handlers, endpoint, device, **kwargs)
 
     @staticmethod
     def parse(value: bool | int) -> bool:
@@ -405,7 +398,7 @@ class AqaraE1CurtainMotorOpenedByHandBinarySensor(BinarySensor):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossMountingModeActive(BinarySensor):
     """Danfoss TRV proprietary attribute exposing whether in mounting mode."""
@@ -419,7 +412,7 @@ class DanfossMountingModeActive(BinarySensor):
 
 @MULTI_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossHeatRequired(BinarySensor):
     """Danfoss TRV proprietary attribute exposing whether heat is required."""
@@ -431,7 +424,7 @@ class DanfossHeatRequired(BinarySensor):
 
 @CONFIG_DIAGNOSTIC_MATCH(
     cluster_handler_names=CLUSTER_HANDLER_THERMOSTAT,
-    quirk_ids={DANFOSS_ALLY_THERMOSTAT},
+    exposed_features={DANFOSS_ALLY_THERMOSTAT},
 )
 class DanfossPreheatStatus(BinarySensor):
     """Danfoss TRV proprietary attribute exposing whether in pre-heating mode."""

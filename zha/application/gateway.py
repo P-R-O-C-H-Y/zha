@@ -19,6 +19,8 @@ from zigpy.config import (
     CONF_DEVICE_BAUDRATE,
     CONF_DEVICE_FLOW_CONTROL,
     CONF_DEVICE_PATH,
+    CONF_NWK,
+    CONF_NWK_COUNTRY_CODE,
     CONF_NWK_VALIDATE_SETTINGS,
 )
 import zigpy.device
@@ -58,6 +60,7 @@ from zha.zigbee.device import Device, DeviceInfo, DeviceStatus, ExtendedDeviceIn
 from zha.zigbee.group import Group, GroupInfo, GroupMemberReference
 
 BLOCK_LOG_TIMEOUT: Final[int] = 60
+SHUT_DOWN_DELAY_S: Final[float] = 0.1
 _R = TypeVar("_R")
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,6 +206,13 @@ class Gateway(AsyncUtilMixin, EventBase):
             CONF_DEVICE_FLOW_CONTROL: self.config.config.coordinator_configuration.flow_control,
         }
 
+        if (
+            self.config.country_code is not None
+            and CONF_NWK_COUNTRY_CODE not in app_config.get(CONF_NWK, {})
+        ):
+            app_config.setdefault(CONF_NWK, {})
+            app_config[CONF_NWK][CONF_NWK_COUNTRY_CODE] = self.config.country_code
+
         if CONF_NWK_VALIDATE_SETTINGS not in app_config:
             app_config[CONF_NWK_VALIDATE_SETTINGS] = True
 
@@ -338,7 +348,9 @@ class Gateway(AsyncUtilMixin, EventBase):
     @property
     def radio_concurrency(self) -> int:
         """Maximum configured radio concurrency."""
-        return self.application_controller._concurrent_requests_semaphore.max_value  # pylint: disable=protected-access
+        return (
+            self.application_controller._concurrent_requests_semaphore.max_concurrency
+        )  # pylint: disable=protected-access
 
     async def async_fetch_updated_state_mains(self) -> None:
         """Fetch updated state for mains powered devices."""
@@ -764,7 +776,8 @@ class Gateway(AsyncUtilMixin, EventBase):
         if self.application_controller is not None:
             await self.application_controller.shutdown()
             self.application_controller = None
-            await asyncio.sleep(0.1)  # give bellows thread callback a chance to run
+            # give bellows thread callback a chance to run
+            await asyncio.sleep(SHUT_DOWN_DELAY_S)
 
         await super().shutdown()
 

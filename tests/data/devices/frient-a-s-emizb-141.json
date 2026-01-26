@@ -7,9 +7,9 @@
   "friendly_manufacturer": "frient A/S",
   "friendly_model": "EMIZB-141",
   "name": "frient A/S EMIZB-141",
-  "quirk_applied": false,
-  "quirk_class": "zigpy.device.Device",
-  "quirk_id": null,
+  "quirk_applied": true,
+  "quirk_class": "zhaquirks.develco.ManufacturerDeviceV2",
+  "exposes_features": [],
   "manufacturer_code": 4117,
   "power_source": "Battery or Unknown",
   "lqi": 255,
@@ -243,6 +243,11 @@
           "cluster_id": "0x0b05",
           "endpoint_attribute": "diagnostic",
           "attributes": []
+        },
+        {
+          "cluster_id": "0xfd10",
+          "endpoint_attribute": null,
+          "attributes": []
         }
       ],
       "out_clusters": [
@@ -271,6 +276,7 @@
       ]
     }
   },
+  "original_signature": {},
   "zha_lib_entities": {
     "button": [
       {
@@ -281,6 +287,7 @@
           "platform": "button",
           "class_name": "IdentifyButton",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "identify",
           "state_class": null,
           "entity_category": "diagnostic",
@@ -317,6 +324,98 @@
           "class_name": "IdentifyButton",
           "available": true
         }
+      },
+      {
+        "info_object": {
+          "fallback_name": "Reset summation delivered",
+          "unique_id": "00:15:bc:00:1b:10:01:5c-2-current_summation",
+          "migrate_unique_ids": [],
+          "platform": "button",
+          "class_name": "WriteAttributeButton",
+          "translation_key": "reset_summation_delivered",
+          "translation_placeholders": null,
+          "device_class": null,
+          "state_class": null,
+          "entity_category": "config",
+          "entity_registry_enabled_default": true,
+          "enabled": true,
+          "primary": false,
+          "cluster_handlers": [
+            {
+              "class_name": "ClusterHandler",
+              "generic_id": "cluster_handler_0xfd10",
+              "endpoint_id": 2,
+              "cluster": {
+                "id": 64784,
+                "name": "ManufacturerMetering",
+                "type": "server"
+              },
+              "id": "2:0xfd10",
+              "unique_id": "00:15:bc:00:1b:10:01:5c:2:0xfd10",
+              "status": "INITIALIZED",
+              "value_attribute": null
+            }
+          ],
+          "device_ieee": "00:15:bc:00:1b:10:01:5c",
+          "endpoint_id": 2,
+          "available": true,
+          "group_id": null,
+          "attribute_name": "current_summation",
+          "attribute_value": 0
+        },
+        "state": {
+          "class_name": "WriteAttributeButton",
+          "available": true
+        }
+      }
+    ],
+    "number": [
+      {
+        "info_object": {
+          "fallback_name": "Pulse configuration",
+          "unique_id": "00:15:bc:00:1b:10:01:5c-2-pulse_configuration",
+          "migrate_unique_ids": [],
+          "platform": "number",
+          "class_name": "NumberConfigurationEntity",
+          "translation_key": "pulse_configuration",
+          "translation_placeholders": null,
+          "device_class": null,
+          "state_class": null,
+          "entity_category": "config",
+          "entity_registry_enabled_default": true,
+          "enabled": true,
+          "primary": false,
+          "cluster_handlers": [
+            {
+              "class_name": "ClusterHandler",
+              "generic_id": "cluster_handler_0xfd10",
+              "endpoint_id": 2,
+              "cluster": {
+                "id": 64784,
+                "name": "ManufacturerMetering",
+                "type": "server"
+              },
+              "id": "2:0xfd10",
+              "unique_id": "00:15:bc:00:1b:10:01:5c:2:0xfd10",
+              "status": "INITIALIZED",
+              "value_attribute": null
+            }
+          ],
+          "device_ieee": "00:15:bc:00:1b:10:01:5c",
+          "endpoint_id": 2,
+          "available": true,
+          "group_id": null,
+          "mode": "box",
+          "native_max_value": 10000,
+          "native_min_value": 50,
+          "native_step": 1,
+          "native_unit_of_measurement": "pulses/kWh"
+        },
+        "state": {
+          "class_name": "NumberConfigurationEntity",
+          "available": true,
+          "state": null
+        }
       }
     ],
     "sensor": [
@@ -328,6 +427,7 @@
           "platform": "sensor",
           "class_name": "LQISensor",
           "translation_key": "lqi",
+          "translation_placeholders": null,
           "device_class": null,
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -371,6 +471,7 @@
           "platform": "sensor",
           "class_name": "RSSISensor",
           "translation_key": "rssi",
+          "translation_placeholders": null,
           "device_class": "signal_strength",
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -414,6 +515,7 @@
           "platform": "sensor",
           "class_name": "Battery",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "battery",
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -465,6 +567,7 @@
           "platform": "sensor",
           "class_name": "SmartEnergyMetering",
           "translation_key": "instantaneous_demand",
+          "translation_placeholders": null,
           "device_class": "power",
           "state_class": "measurement",
           "entity_category": null,
@@ -516,6 +619,7 @@
           "platform": "sensor",
           "class_name": "SmartEnergySummation",
           "translation_key": "summation_delivered",
+          "translation_placeholders": null,
           "device_class": "energy",
           "state_class": "total_increasing",
           "entity_category": null,
@@ -569,6 +673,7 @@
           "platform": "update",
           "class_name": "FirmwareUpdateEntity",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "firmware",
           "state_class": null,
           "entity_category": "config",

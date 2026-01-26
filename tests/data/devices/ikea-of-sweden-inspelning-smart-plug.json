@@ -9,7 +9,7 @@
   "name": "IKEA of Sweden INSPELNING Smart plug",
   "quirk_applied": true,
   "quirk_class": "zigpy.quirks.v2.CustomDeviceV2",
-  "quirk_id": null,
+  "exposes_features": [],
   "manufacturer_code": 4476,
   "power_source": "Mains",
   "lqi": null,
@@ -422,7 +422,7 @@
         },
         {
           "cluster_id": "0xfc85",
-          "endpoint_attribute": "manufacturer_specific",
+          "endpoint_attribute": null,
           "attributes": []
         }
       ],
@@ -474,6 +474,7 @@
           "platform": "button",
           "class_name": "IdentifyButton",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "identify",
           "state_class": null,
           "entity_category": "diagnostic",
@@ -521,6 +522,7 @@
           "platform": "select",
           "class_name": "StartupOnOffSelectEntity",
           "translation_key": "start_up_on_off",
+          "translation_placeholders": null,
           "device_class": null,
           "state_class": null,
           "entity_category": "config",
@@ -571,6 +573,7 @@
           "platform": "sensor",
           "class_name": "LQISensor",
           "translation_key": "lqi",
+          "translation_placeholders": null,
           "device_class": null,
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -614,6 +617,7 @@
           "platform": "sensor",
           "class_name": "RSSISensor",
           "translation_key": "rssi",
+          "translation_placeholders": null,
           "device_class": "signal_strength",
           "state_class": "measurement",
           "entity_category": "diagnostic",
@@ -657,6 +661,7 @@
           "platform": "sensor",
           "class_name": "SmartEnergySummation",
           "translation_key": "summation_delivered",
+          "translation_placeholders": null,
           "device_class": "energy",
           "state_class": "total_increasing",
           "entity_category": null,
@@ -708,6 +713,7 @@
           "platform": "sensor",
           "class_name": "ReportingElectricalMeasurement",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "power",
           "state_class": "measurement",
           "entity_category": null,
@@ -756,6 +762,7 @@
           "platform": "sensor",
           "class_name": "ElectricalMeasurementRMSCurrent",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "current",
           "state_class": "measurement",
           "entity_category": null,
@@ -804,6 +811,7 @@
           "platform": "sensor",
           "class_name": "ElectricalMeasurementRMSVoltage",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "voltage",
           "state_class": "measurement",
           "entity_category": null,
@@ -854,6 +862,7 @@
           "platform": "switch",
           "class_name": "Switch",
           "translation_key": "switch",
+          "translation_placeholders": null,
           "device_class": null,
           "state_class": null,
           "entity_category": null,
@@ -886,6 +895,102 @@
           "state": 0,
           "available": true
         }
+      },
+      {
+        "info_object": {
+          "fallback_name": "Child lock",
+          "unique_id": "d4:48:67:ff:fe:13:d6:f8-1-child_lock",
+          "migrate_unique_ids": [],
+          "platform": "switch",
+          "class_name": "ConfigurableAttributeSwitch",
+          "translation_key": "child_lock",
+          "translation_placeholders": null,
+          "device_class": null,
+          "state_class": null,
+          "entity_category": "config",
+          "entity_registry_enabled_default": true,
+          "enabled": true,
+          "primary": false,
+          "cluster_handlers": [
+            {
+              "class_name": "ClusterHandler",
+              "generic_id": "cluster_handler_0xfc85",
+              "endpoint_id": 1,
+              "cluster": {
+                "id": 64645,
+                "name": "IkeaSmartPlugCluster",
+                "type": "server"
+              },
+              "id": "1:0xfc85",
+              "unique_id": "d4:48:67:ff:fe:13:d6:f8:1:0xfc85",
+              "status": "INITIALIZED",
+              "value_attribute": null
+            }
+          ],
+          "device_ieee": "d4:48:67:ff:fe:13:d6:f8",
+          "endpoint_id": 1,
+          "available": true,
+          "group_id": null,
+          "attribute_name": "child_lock",
+          "invert_attribute_name": null,
+          "force_inverted": false,
+          "off_value": 0,
+          "on_value": 1
+        },
+        "state": {
+          "class_name": "ConfigurableAttributeSwitch",
+          "available": true,
+          "state": false,
+          "inverted": false
+        }
+      },
+      {
+        "info_object": {
+          "fallback_name": "Disable LED",
+          "unique_id": "d4:48:67:ff:fe:13:d6:f8-1-enable_led",
+          "migrate_unique_ids": [],
+          "platform": "switch",
+          "class_name": "ConfigurableAttributeSwitch",
+          "translation_key": "disable_led",
+          "translation_placeholders": null,
+          "device_class": null,
+          "state_class": null,
+          "entity_category": "config",
+          "entity_registry_enabled_default": true,
+          "enabled": true,
+          "primary": false,
+          "cluster_handlers": [
+            {
+              "class_name": "ClusterHandler",
+              "generic_id": "cluster_handler_0xfc85",
+              "endpoint_id": 1,
+              "cluster": {
+                "id": 64645,
+                "name": "IkeaSmartPlugCluster",
+                "type": "server"
+              },
+              "id": "1:0xfc85",
+              "unique_id": "d4:48:67:ff:fe:13:d6:f8:1:0xfc85",
+              "status": "INITIALIZED",
+              "value_attribute": null
+            }
+          ],
+          "device_ieee": "d4:48:67:ff:fe:13:d6:f8",
+          "endpoint_id": 1,
+          "available": true,
+          "group_id": null,
+          "attribute_name": "enable_led",
+          "invert_attribute_name": null,
+          "force_inverted": false,
+          "off_value": 1,
+          "on_value": 0
+        },
+        "state": {
+          "class_name": "ConfigurableAttributeSwitch",
+          "available": true,
+          "state": false,
+          "inverted": false
+        }
       }
     ],
     "update": [
@@ -897,6 +1002,7 @@
           "platform": "update",
           "class_name": "FirmwareUpdateEntity",
           "translation_key": null,
+          "translation_placeholders": null,
           "device_class": "firmware",
           "state_class": null,
           "entity_category": "config",
