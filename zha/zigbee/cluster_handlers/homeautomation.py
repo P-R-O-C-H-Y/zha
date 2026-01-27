@@ -205,11 +205,8 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         ElectricalMeasurement.AttributeDefs.rms_voltage_max_ph_b.name,
         ElectricalMeasurement.AttributeDefs.rms_voltage_max_ph_c.name,
         ElectricalMeasurement.AttributeDefs.dc_voltage.name,
-        ElectricalMeasurement.AttributeDefs.dc_voltage_max.name,
         ElectricalMeasurement.AttributeDefs.dc_current.name,
-        ElectricalMeasurement.AttributeDefs.dc_current_max.name,
         ElectricalMeasurement.AttributeDefs.dc_power.name,
-        ElectricalMeasurement.AttributeDefs.dc_power_max.name,
     ]
     ZCL_INIT_ATTRS = {
         ElectricalMeasurement.AttributeDefs.ac_frequency_divisor.name: True,
@@ -229,13 +226,10 @@ class ElectricalMeasurementClusterHandler(ClusterHandler):
         ElectricalMeasurement.AttributeDefs.rms_voltage_max_ph_b.name: True,
         ElectricalMeasurement.AttributeDefs.rms_voltage_max_ph_c.name: True,
         ElectricalMeasurement.AttributeDefs.dc_voltage_divisor.name: True,
-        ElectricalMeasurement.AttributeDefs.dc_voltage_max.name: True,
         ElectricalMeasurement.AttributeDefs.dc_voltage_multiplier.name: True,
         ElectricalMeasurement.AttributeDefs.dc_current_divisor.name: True,
-        ElectricalMeasurement.AttributeDefs.dc_current_max.name: True,
         ElectricalMeasurement.AttributeDefs.dc_current_multiplier.name: True,
         ElectricalMeasurement.AttributeDefs.dc_power_divisor.name: True,
-        ElectricalMeasurement.AttributeDefs.dc_power_max.name: True,
         ElectricalMeasurement.AttributeDefs.dc_power_multiplier.name: True,
     }
 
