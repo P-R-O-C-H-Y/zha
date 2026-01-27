@@ -477,7 +477,7 @@ async def async_test_em_dc_voltage(
     zha_gateway: Gateway, cluster: Cluster, entity: PlatformEntity
 ) -> None:
     """Test electrical measurement DC Voltage sensor."""
-    assert entity.extra_state_attribute_names == {"measurement_type", "dc_voltage_max"}
+    assert entity.extra_state_attribute_names == {"measurement_type"}
 
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0100: 1234})
     assert_state(entity, 123.4, "V")
@@ -488,9 +488,6 @@ async def async_test_em_dc_voltage(
     await send_attributes_report(zha_gateway, cluster, {"dc_voltage_divisor": 100})
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0100: 2236})
     assert_state(entity, 22.36, "V")
-
-    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0102: 888})
-    assert entity.state["dc_voltage_max"] == 8.88
 
 
 async def async_test_em_dc_current(
@@ -507,9 +504,6 @@ async def async_test_em_dc_current(
 
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0103: 1236})
     assert_state(entity, 123.6, "A")
-
-    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0105: 88})
-    assert entity.state["dc_current_max"] == 8.8
 
 
 async def async_test_em_dc_power(
@@ -530,9 +524,6 @@ async def async_test_em_dc_power(
 
     await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0106: 99})
     assert_state(entity, 9.9, "W")
-
-    await send_attributes_report(zha_gateway, cluster, {0: 1, 0x0108: 88})
-    assert entity.state["dc_power_max"] == 8.8
 
 
 @pytest.mark.parametrize(
@@ -1459,15 +1450,12 @@ async def test_elec_measurement_skip_unsupported_attribute(
         "power_divisor",
         "power_multiplier",
         "dc_voltage",
-        "dc_voltage_max",
         "dc_voltage_divisor",
         "dc_voltage_multiplier",
         "dc_current",
-        "dc_current_max",
         "dc_current_divisor",
         "dc_current_multiplier",
         "dc_power",
-        "dc_power_max",
         "dc_power_divisor",
         "dc_power_multiplier",
     }
